@@ -13,7 +13,7 @@ from reportlab.lib.utils import ImageReader
 # ----------- Roboflow API -----------
 CLIENT = InferenceHTTPClient(
     api_url="https://serverless.roboflow.com",
-    api_key="YOUR_API_KEY"
+    api_key="6xjiriCPTWTkyix8KnVO"
 )
 
 MODEL_ID = "wall-infrastructure-detection/2"
@@ -126,6 +126,7 @@ if uploaded_file is not None:
         with open(pdf_file, "rb") as f:
             st.download_button("Download Blueprint", f,
                                file_name=pdf_file)
+
 
 
 
