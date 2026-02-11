@@ -8,7 +8,7 @@ import cv2
 # ----------- Roboflow API -----------
 CLIENT = InferenceHTTPClient(
     api_url="https://serverless.roboflow.com",
-    api_key="YOUR_API_KEY"
+    api_key="6xjiriCPTWTkyix8KnVO"
 )
 
 MODEL_ID = "wall-infrastructure-detection/2"
@@ -144,3 +144,4 @@ if uploaded_file is not None:
     st.subheader("Summary")
     st.write(f"Total Pipes: {pipe_count}")
     st.write(f"Total Pipe Length: {total_length:.2f} cm")
+
