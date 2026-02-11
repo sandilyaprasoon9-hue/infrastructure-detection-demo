@@ -13,6 +13,32 @@ CLIENT = InferenceHTTPClient(
 
 MODEL_ID = "wall-infrastructure-detection/2"
 
+# ----------- Brick Auto Detection Function -----------
+def detect_brick_size(img_np):
+    gray = cv2.cvtColor(img_np, cv2.COLOR_BGR2GRAY)
+    edges = cv2.Canny(gray, 50, 150)
+
+    contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    widths = []
+    heights = []
+
+    for cnt in contours:
+        x, y, w, h = cv2.boundingRect(cnt)
+
+        if w < 30 or h < 15:
+            continue
+
+        ratio = w / float(h)
+        if 1.5 < ratio < 3.5:
+            widths.append(w)
+            heights.append(h)
+
+    if len(widths) == 0:
+        return None, None
+
+    return int(np.mean(widths)), int(np.mean(heights))
+
 # ----------- UI -----------
 st.title("Wall Infrastructure Detection")
 
@@ -26,23 +52,18 @@ if uploaded_file is not None:
     img_np = np.array(image)
     img_h, img_w = img_np.shape[:2]
 
-    # ======================================================
-    # SCALE MODE
-    # ======================================================
-    st.subheader("Measurement Settings")
-
+    # ===============================
+    # Measurement Mode
+    # ===============================
     mode = st.radio(
         "Measurement Mode",
-        ["Manual Wall Dimensions", "Auto Estimate using Brick Module"]
+        ["Manual Wall Dimensions", "Brick Calibration (Manual)", "Brick Calibration (Auto Detect)"]
     )
 
     scale_ready = False
-    PIXEL_TO_CM_X = None
-    PIXEL_TO_CM_Y = None
 
-    # ---------------- MANUAL MODE ----------------
+    # -------- Manual Wall Dimensions --------
     if mode == "Manual Wall Dimensions":
-
         wall_width_cm = st.number_input("Wall Width (cm)", min_value=0.0)
         wall_height_cm = st.number_input("Wall Height (cm)", min_value=0.0)
 
@@ -50,56 +71,43 @@ if uploaded_file is not None:
             PIXEL_TO_CM_X = wall_width_cm / img_w
             PIXEL_TO_CM_Y = wall_height_cm / img_h
             scale_ready = True
-        else:
-            st.warning("Enter wall dimensions to continue")
 
-    # ---------------- AUTO BRICK MODE ----------------
-    else:
-
-        brick_mode = st.selectbox(
-            "Brick measurement",
-            ["Brick only (19×9 cm)", "Brick with mortar (20×10 cm)"]
-        )
-
-        orientation = st.selectbox(
-            "Brick Orientation",
-            ["Stretcher (Length visible)", "Header (Width visible)"]
-        )
-
-        if brick_mode == "Brick only (19×9 cm)":
-            brick_length = 19
-            brick_height = 9
-        else:
-            brick_length = 20
-            brick_height = 10
-
-        if orientation == "Header (Width visible)":
-            brick_length = brick_height
-
-        st.info("Enter detected brick pixel dimensions")
+    # -------- Manual Brick Calibration --------
+    elif mode == "Brick Calibration (Manual)":
 
         brick_pixel_w = st.number_input("Brick pixel width", min_value=0.0)
         brick_pixel_h = st.number_input("Brick pixel height", min_value=0.0)
 
         if brick_pixel_w > 5 and brick_pixel_h > 5:
-            PIXEL_TO_CM_X = brick_length / brick_pixel_w
-            PIXEL_TO_CM_Y = brick_height / brick_pixel_h
+            PIXEL_TO_CM_X = 20 / brick_pixel_w
+            PIXEL_TO_CM_Y = 10 / brick_pixel_h
+            scale_ready = True
+
+    # -------- Auto Brick Detection --------
+    else:
+
+        brick_w_px, brick_h_px = detect_brick_size(img_np)
+
+        if brick_w_px is not None:
+            st.success("Brick auto detected")
+            st.write(f"Brick pixel width: {brick_w_px}")
+            st.write(f"Brick pixel height: {brick_h_px}")
+
+            PIXEL_TO_CM_X = 20 / brick_w_px
+            PIXEL_TO_CM_Y = 10 / brick_h_px
             scale_ready = True
         else:
-            st.warning("Enter correct brick pixel values (>5 pixels)")
+            st.warning("Bricks not detected clearly")
 
-    # STOP if scale not ready
     if not scale_ready:
         st.stop()
 
-    # Debug display
-    st.success("Scale calibrated")
-    st.write(f"Pixel → CM X: {PIXEL_TO_CM_X:.4f}")
-    st.write(f"Pixel → CM Y: {PIXEL_TO_CM_Y:.4f}")
+    st.write(f"Pixel→CM X: {PIXEL_TO_CM_X:.4f}")
+    st.write(f"Pixel→CM Y: {PIXEL_TO_CM_Y:.4f}")
 
-    # ======================================================
+    # ===============================
     # Run inference
-    # ======================================================
+    # ===============================
     with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
         image.save(tmp.name)
         temp_path = tmp.name
@@ -108,8 +116,6 @@ if uploaded_file is not None:
 
     total_length = 0
     pipe_count = 0
-
-    st.subheader("Detections")
 
     for pred in result["predictions"]:
         label = pred["class"]
@@ -125,24 +131,16 @@ if uploaded_file is not None:
 
         cv2.rectangle(img_np, (x1, y1), (x2, y2), (0,255,0), 2)
 
-        # Measurement using calibrated scale
         height_cm = h * PIXEL_TO_CM_Y
         width_cm = w * PIXEL_TO_CM_X
 
         pipe_count += 1
         total_length += height_cm
 
-        st.write(f"Object: {label}")
-        st.write(f"Length: {height_cm:.2f} cm")
-        st.write(f"Width: {width_cm:.2f} cm")
-        st.write("---")
+        st.write(f"{label} | Length: {height_cm:.2f} cm | Width: {width_cm:.2f} cm")
 
     st.image(img_np, caption="Detected Objects")
 
     st.subheader("Summary")
-    st.write(f"Total Pipes Detected: {pipe_count}")
-    st.write(f"Estimated Total Pipe Length: {total_length:.2f} cm")
-
-
-
-
+    st.write(f"Total Pipes: {pipe_count}")
+    st.write(f"Total Pipe Length: {total_length:.2f} cm")
