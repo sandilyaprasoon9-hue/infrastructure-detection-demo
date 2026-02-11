@@ -1,16 +1,14 @@
-
-
-
-
 import streamlit as st
 from inference_sdk import InferenceHTTPClient
 from PIL import Image
+import numpy as np
 import tempfile
+import cv2
 
 # ----------- Roboflow API -----------
 CLIENT = InferenceHTTPClient(
     api_url="https://serverless.roboflow.com",
-    api_key="6xjiriCPTWTkyix8KnVO"
+    api_key="YOUR_API_KEY"
 )
 
 MODEL_ID = "wall-infrastructure-detection/2"
@@ -32,20 +30,32 @@ if uploaded_file is not None:
     # Run inference
     result = CLIENT.infer(temp_path, model_id=MODEL_ID)
 
-    st.subheader("Detections")
+    # Convert image to numpy
+    img_np = np.array(image)
 
     PIXEL_TO_CM = 0.1
-
     total_length = 0
     pipe_count = 0
 
+    st.subheader("Detections")
+
     for pred in result["predictions"]:
         label = pred["class"]
-        height_px = pred["height"]
-        width_px = pred["width"]
+        x = int(pred["x"])
+        y = int(pred["y"])
+        w = int(pred["width"])
+        h = int(pred["height"])
 
-        height_cm = height_px * PIXEL_TO_CM
-        width_cm = width_px * PIXEL_TO_CM
+        # Draw bounding box
+        x1 = int(x - w/2)
+        y1 = int(y - h/2)
+        x2 = int(x + w/2)
+        y2 = int(y + h/2)
+        cv2.rectangle(img_np, (x1, y1), (x2, y2), (0,255,0), 2)
+
+        # Measurement
+        height_cm = h * PIXEL_TO_CM
+        width_cm = w * PIXEL_TO_CM
 
         pipe_count += 1
         total_length += height_cm
@@ -55,7 +65,8 @@ if uploaded_file is not None:
         st.write(f"Width: {width_cm:.2f} cm")
         st.write("---")
 
+    st.image(img_np, caption="Detected Objects")
+
     st.subheader("Summary")
     st.write(f"Total Pipes Detected: {pipe_count}")
     st.write(f"Estimated Total Pipe Length: {total_length:.2f} cm")
-
