@@ -8,7 +8,7 @@ import cv2
 # ----------- Roboflow API -----------
 CLIENT = InferenceHTTPClient(
     api_url="https://serverless.roboflow.com",
-    api_key="6xjiriCPTWTkyix8KnVO"
+    api_key="YOUR_API_KEY"
 )
 
 MODEL_ID = "wall-infrastructure-detection/2"
@@ -36,18 +36,22 @@ if uploaded_file is not None:
         ["Manual Wall Dimensions", "Auto Estimate using Brick Module"]
     )
 
-    PIXEL_TO_CM_X = 0.1
-    PIXEL_TO_CM_Y = 0.1
+    scale_ready = False
+    PIXEL_TO_CM_X = None
+    PIXEL_TO_CM_Y = None
 
     # ---------------- MANUAL MODE ----------------
     if mode == "Manual Wall Dimensions":
 
-        wall_width_cm = st.number_input("Wall Width (cm)", min_value=1.0)
-        wall_height_cm = st.number_input("Wall Height (cm)", min_value=1.0)
+        wall_width_cm = st.number_input("Wall Width (cm)", min_value=0.0)
+        wall_height_cm = st.number_input("Wall Height (cm)", min_value=0.0)
 
         if wall_width_cm > 0 and wall_height_cm > 0:
             PIXEL_TO_CM_X = wall_width_cm / img_w
             PIXEL_TO_CM_Y = wall_height_cm / img_h
+            scale_ready = True
+        else:
+            st.warning("Enter wall dimensions to continue")
 
     # ---------------- AUTO BRICK MODE ----------------
     else:
@@ -74,12 +78,24 @@ if uploaded_file is not None:
 
         st.info("Enter detected brick pixel dimensions")
 
-        brick_pixel_w = st.number_input("Brick pixel width", min_value=1.0)
-        brick_pixel_h = st.number_input("Brick pixel height", min_value=1.0)
+        brick_pixel_w = st.number_input("Brick pixel width", min_value=0.0)
+        brick_pixel_h = st.number_input("Brick pixel height", min_value=0.0)
 
-        if brick_pixel_w > 0 and brick_pixel_h > 0:
+        if brick_pixel_w > 5 and brick_pixel_h > 5:
             PIXEL_TO_CM_X = brick_length / brick_pixel_w
             PIXEL_TO_CM_Y = brick_height / brick_pixel_h
+            scale_ready = True
+        else:
+            st.warning("Enter correct brick pixel values (>5 pixels)")
+
+    # STOP if scale not ready
+    if not scale_ready:
+        st.stop()
+
+    # Debug display
+    st.success("Scale calibrated")
+    st.write(f"Pixel → CM X: {PIXEL_TO_CM_X:.4f}")
+    st.write(f"Pixel → CM Y: {PIXEL_TO_CM_Y:.4f}")
 
     # ======================================================
     # Run inference
@@ -109,7 +125,7 @@ if uploaded_file is not None:
 
         cv2.rectangle(img_np, (x1, y1), (x2, y2), (0,255,0), 2)
 
-        # Measurement using dynamic scale
+        # Measurement using calibrated scale
         height_cm = h * PIXEL_TO_CM_Y
         width_cm = w * PIXEL_TO_CM_X
 
@@ -126,5 +142,7 @@ if uploaded_file is not None:
     st.subheader("Summary")
     st.write(f"Total Pipes Detected: {pipe_count}")
     st.write(f"Estimated Total Pipe Length: {total_length:.2f} cm")
+
+
 
 
