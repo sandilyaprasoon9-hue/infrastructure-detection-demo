@@ -2,26 +2,25 @@ import streamlit as st
 from inference_sdk import InferenceHTTPClient
 from PIL import Image
 import numpy as np
-import tempfile
 import cv2
+import base64
 
 # ----------- Roboflow API -----------
 CLIENT = InferenceHTTPClient(
     api_url="https://serverless.roboflow.com",
-    api_key="6xjiriCPTWTkyix8KnVO"
+    api_key="YOUR_API_KEY"
 )
 
 MODEL_ID = "wall-infrastructure-detection/2"
 
-# ----------- Brick Auto Detection Function -----------
+# ----------- Brick Auto Detection -----------
 def detect_brick_size(img_np):
     gray = cv2.cvtColor(img_np, cv2.COLOR_BGR2GRAY)
     edges = cv2.Canny(gray, 50, 150)
 
     contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    widths = []
-    heights = []
+    widths, heights = [], []
 
     for cnt in contours:
         x, y, w, h = cv2.boundingRect(cnt)
@@ -46,15 +45,16 @@ uploaded_file = st.file_uploader("Upload Image", type=["jpg","png","jpeg"])
 
 if uploaded_file is not None:
 
+    uploaded_file.seek(0)
     image = Image.open(uploaded_file)
     st.image(image, caption="Uploaded Image", use_column_width=True)
 
     img_np = np.array(image)
     img_h, img_w = img_np.shape[:2]
 
-    # ===============================
+    # ======================================================
     # Measurement Mode
-    # ===============================
+    # ======================================================
     mode = st.radio(
         "Measurement Mode",
         ["Manual Wall Dimensions", "Brick Calibration (Manual)", "Brick Calibration (Auto Detect)"]
@@ -62,7 +62,7 @@ if uploaded_file is not None:
 
     scale_ready = False
 
-    # -------- Manual Wall Dimensions --------
+    # ---------- Manual Wall ----------
     if mode == "Manual Wall Dimensions":
         wall_width_cm = st.number_input("Wall Width (cm)", min_value=0.0)
         wall_height_cm = st.number_input("Wall Height (cm)", min_value=0.0)
@@ -72,7 +72,7 @@ if uploaded_file is not None:
             PIXEL_TO_CM_Y = wall_height_cm / img_h
             scale_ready = True
 
-    # -------- Manual Brick Calibration --------
+    # ---------- Manual Brick ----------
     elif mode == "Brick Calibration (Manual)":
 
         brick_pixel_w = st.number_input("Brick pixel width", min_value=0.0)
@@ -83,7 +83,7 @@ if uploaded_file is not None:
             PIXEL_TO_CM_Y = 10 / brick_pixel_h
             scale_ready = True
 
-    # -------- Auto Brick Detection --------
+    # ---------- Auto Brick ----------
     else:
 
         brick_w_px, brick_h_px = detect_brick_size(img_np)
@@ -105,14 +105,14 @@ if uploaded_file is not None:
     st.write(f"Pixel→CM X: {PIXEL_TO_CM_X:.4f}")
     st.write(f"Pixel→CM Y: {PIXEL_TO_CM_Y:.4f}")
 
-    # ===============================
-    # Run inference
-    # ===============================
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
-        image.save(tmp.name)
-        temp_path = tmp.name
+    # ======================================================
+    # Inference using BASE64 (fix for Streamlit cloud)
+    # ======================================================
+    uploaded_file.seek(0)
+    img_bytes = uploaded_file.read()
+    img_base64 = base64.b64encode(img_bytes).decode("utf-8")
 
-    result = CLIENT.infer(temp_path, model_id=MODEL_ID)
+    result = CLIENT.infer(img_base64, model_id=MODEL_ID)
 
     total_length = 0
     pipe_count = 0
@@ -144,4 +144,6 @@ if uploaded_file is not None:
     st.subheader("Summary")
     st.write(f"Total Pipes: {pipe_count}")
     st.write(f"Total Pipe Length: {total_length:.2f} cm")
+
+
 
