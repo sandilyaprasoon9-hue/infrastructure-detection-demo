@@ -1,7 +1,10 @@
+
+
+
+
 import streamlit as st
 from inference_sdk import InferenceHTTPClient
 from PIL import Image
-import numpy as np
 import tempfile
 
 # ----------- Roboflow API -----------
@@ -26,13 +29,15 @@ if uploaded_file is not None:
         image.save(tmp.name)
         temp_path = tmp.name
 
-    # Run inference using file path
+    # Run inference
     result = CLIENT.infer(temp_path, model_id=MODEL_ID)
 
     st.subheader("Detections")
 
-    # ----------- Measurement Logic -----------
-    PIXEL_TO_CM = 0.1   # calibration factor
+    PIXEL_TO_CM = 0.1
+
+    total_length = 0
+    pipe_count = 0
 
     for pred in result["predictions"]:
         label = pred["class"]
@@ -42,11 +47,15 @@ if uploaded_file is not None:
         height_cm = height_px * PIXEL_TO_CM
         width_cm = width_px * PIXEL_TO_CM
 
+        pipe_count += 1
+        total_length += height_cm
+
         st.write(f"Object: {label}")
-        st.write(f"Approx Height: {height_cm:.2f} cm")
-        st.write(f"Approx Width: {width_cm:.2f} cm")
+        st.write(f"Length: {height_cm:.2f} cm")
+        st.write(f"Width: {width_cm:.2f} cm")
         st.write("---")
 
-
-
+    st.subheader("Summary")
+    st.write(f"Total Pipes Detected: {pipe_count}")
+    st.write(f"Estimated Total Pipe Length: {total_length:.2f} cm")
 
