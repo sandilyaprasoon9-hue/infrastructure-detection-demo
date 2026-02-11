@@ -52,9 +52,9 @@ if uploaded_file is not None:
     img_np = np.array(image)
     img_h, img_w = img_np.shape[:2]
 
-    # ======================================================
+    # ===============================
     # Measurement Mode
-    # ======================================================
+    # ===============================
     mode = st.radio(
         "Measurement Mode",
         ["Manual Wall Dimensions", "Brick Calibration (Manual)", "Brick Calibration (Auto Detect)"]
@@ -105,9 +105,9 @@ if uploaded_file is not None:
     st.write(f"Pixel→CM X: {PIXEL_TO_CM_X:.4f}")
     st.write(f"Pixel→CM Y: {PIXEL_TO_CM_Y:.4f}")
 
-    # ======================================================
-    # Inference using BASE64 (fix for Streamlit cloud)
-    # ======================================================
+    # ===============================
+    # Inference using BASE64
+    # ===============================
     uploaded_file.seek(0)
     img_bytes = uploaded_file.read()
     img_base64 = base64.b64encode(img_bytes).decode("utf-8")
@@ -131,19 +131,32 @@ if uploaded_file is not None:
 
         cv2.rectangle(img_np, (x1, y1), (x2, y2), (0,255,0), 2)
 
-        height_cm = h * PIXEL_TO_CM_Y
-        width_cm = w * PIXEL_TO_CM_X
+        # Determine pipe segment orientation
+        length_pixels = max(w, h)
+        diameter_pixels = min(w, h)
+
+        ratio = diameter_pixels / length_pixels
+
+        # Ignore junction-like detections
+        if ratio > 0.6:
+            st.write(f"{label} | Junction / complex structure detected")
+            continue
+
+        length_cm = length_pixels * PIXEL_TO_CM_X
+        diameter_cm = diameter_pixels * PIXEL_TO_CM_X
 
         pipe_count += 1
-        total_length += height_cm
+        total_length += length_cm
 
-        st.write(f"{label} | Length: {height_cm:.2f} cm | Width: {width_cm:.2f} cm")
+        st.write(f"{label} | Length: {length_cm:.2f} cm | Diameter: {diameter_cm:.2f} cm")
 
     st.image(img_np, caption="Detected Objects")
 
     st.subheader("Summary")
     st.write(f"Total Pipes: {pipe_count}")
     st.write(f"Total Pipe Length: {total_length:.2f} cm")
+
+
 
 
 
