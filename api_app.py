@@ -5,13 +5,49 @@ import numpy as np
 import cv2
 import base64
 
+# PDF generation
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.units import cm
+
 # ----------- Roboflow API -----------
 CLIENT = InferenceHTTPClient(
     api_url="https://serverless.roboflow.com",
-    api_key="6xjiriCPTWTkyix8KnVO"
+    api_key="YOUR_API_KEY"
 )
 
 MODEL_ID = "wall-infrastructure-detection/2"
+
+# ----------- A4 Layout Generator -----------
+def generate_a4_pipe_layout(predictions, PIXEL_TO_CM_X, filename="wall_pipe_layout.pdf"):
+    c = canvas.Canvas(filename, pagesize=A4)
+    page_w, page_h = A4
+
+    margin_x = 2*cm
+    margin_y = 2*cm
+    draw_scale = 0.3
+
+    c.setFont("Helvetica", 10)
+    c.drawString(2*cm, page_h - 2*cm, "Wall Pipe Layout")
+
+    for pred in predictions:
+        x = pred["x"]
+        y = pred["y"]
+        w = pred["width"]
+        h = pred["height"]
+
+        length_pixels = max(w, h)
+        length_cm = length_pixels * PIXEL_TO_CM_X
+
+        draw_x = margin_x + x * draw_scale
+        draw_y = margin_y + y * draw_scale
+        draw_length = length_pixels * draw_scale
+
+        c.line(draw_x, draw_y, draw_x + draw_length, draw_y)
+        c.drawString(draw_x, draw_y + 5, f"{length_cm:.1f} cm")
+
+    c.save()
+    return filename
 
 # ----------- Brick Auto Detection -----------
 def detect_brick_size(img_np):
@@ -52,9 +88,6 @@ if uploaded_file is not None:
     img_np = np.array(image)
     img_h, img_w = img_np.shape[:2]
 
-    # ===============================
-    # Measurement Mode
-    # ===============================
     mode = st.radio(
         "Measurement Mode",
         ["Manual Wall Dimensions", "Brick Calibration (Manual)", "Brick Calibration (Auto Detect)"]
@@ -62,7 +95,6 @@ if uploaded_file is not None:
 
     scale_ready = False
 
-    # ---------- Manual Wall ----------
     if mode == "Manual Wall Dimensions":
         wall_width_cm = st.number_input("Wall Width (cm)", min_value=0.0)
         wall_height_cm = st.number_input("Wall Height (cm)", min_value=0.0)
@@ -72,9 +104,7 @@ if uploaded_file is not None:
             PIXEL_TO_CM_Y = wall_height_cm / img_h
             scale_ready = True
 
-    # ---------- Manual Brick ----------
     elif mode == "Brick Calibration (Manual)":
-
         brick_pixel_w = st.number_input("Brick pixel width", min_value=0.0)
         brick_pixel_h = st.number_input("Brick pixel height", min_value=0.0)
 
@@ -83,9 +113,7 @@ if uploaded_file is not None:
             PIXEL_TO_CM_Y = 10 / brick_pixel_h
             scale_ready = True
 
-    # ---------- Auto Brick ----------
     else:
-
         brick_w_px, brick_h_px = detect_brick_size(img_np)
 
         if brick_w_px is not None:
@@ -105,18 +133,12 @@ if uploaded_file is not None:
     st.write(f"Pixel→CM X: {PIXEL_TO_CM_X:.4f}")
     st.write(f"Pixel→CM Y: {PIXEL_TO_CM_Y:.4f}")
 
-    # ===============================
-    # Inference using BASE64
-    # ===============================
     uploaded_file.seek(0)
     img_bytes = uploaded_file.read()
     img_base64 = base64.b64encode(img_bytes).decode("utf-8")
 
     result = CLIENT.infer(img_base64, model_id=MODEL_ID)
 
-    # ===============================
-    # Pipe Measurement (Standard Diameter)
-    # ===============================
     STANDARD_PIPE_CM = 3.0
 
     total_length = 0
@@ -136,22 +158,26 @@ if uploaded_file is not None:
 
         cv2.rectangle(img_np, (x1, y1), (x2, y2), (0,255,0), 2)
 
-        # Pipe length = longer side
         length_pixels = max(w, h)
         length_cm = length_pixels * PIXEL_TO_CM_X
-
-        diameter_cm = STANDARD_PIPE_CM
 
         pipe_count += 1
         total_length += length_cm
 
-        st.write(f"{label} | Length: {length_cm:.2f} cm | Diameter: {diameter_cm:.2f} cm")
+        st.write(f"{label} | Length: {length_cm:.2f} cm | Diameter: {STANDARD_PIPE_CM:.2f} cm")
 
     st.image(img_np, caption="Detected Objects")
 
     st.subheader("Summary")
     st.write(f"Total Pipes: {pipe_count}")
     st.write(f"Total Pipe Length: {total_length:.2f} cm")
+
+    # ----------- A4 Layout Button -----------
+    if st.button("Generate A4 Pipe Layout"):
+        pdf_file = generate_a4_pipe_layout(result["predictions"], PIXEL_TO_CM_X)
+        with open(pdf_file, "rb") as f:
+            st.download_button("Download A4 Layout", f, file_name=pdf_file)
+
 
 
 
