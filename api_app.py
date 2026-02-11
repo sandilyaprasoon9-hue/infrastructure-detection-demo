@@ -8,7 +8,7 @@ import base64
 # ----------- Roboflow API -----------
 CLIENT = InferenceHTTPClient(
     api_url="https://serverless.roboflow.com",
-    api_key="6xjiriCPTWTkyix8KnVO"
+    api_key="YOUR_API_KEY"
 )
 
 MODEL_ID = "wall-infrastructure-detection/2"
@@ -114,6 +114,11 @@ if uploaded_file is not None:
 
     result = CLIENT.infer(img_base64, model_id=MODEL_ID)
 
+    # ===============================
+    # Pipe Measurement (Standard Diameter)
+    # ===============================
+    STANDARD_PIPE_CM = 3.0
+
     total_length = 0
     pipe_count = 0
 
@@ -131,19 +136,11 @@ if uploaded_file is not None:
 
         cv2.rectangle(img_np, (x1, y1), (x2, y2), (0,255,0), 2)
 
-        # Determine pipe segment orientation
+        # Pipe length = longer side
         length_pixels = max(w, h)
-        diameter_pixels = min(w, h)
-
-        ratio = diameter_pixels / length_pixels
-
-        # Ignore junction-like detections
-        if ratio > 0.6:
-            st.write(f"{label} | Junction / complex structure detected")
-            continue
-
         length_cm = length_pixels * PIXEL_TO_CM_X
-        diameter_cm = diameter_pixels * PIXEL_TO_CM_X
+
+        diameter_cm = STANDARD_PIPE_CM
 
         pipe_count += 1
         total_length += length_cm
@@ -155,6 +152,7 @@ if uploaded_file is not None:
     st.subheader("Summary")
     st.write(f"Total Pipes: {pipe_count}")
     st.write(f"Total Pipe Length: {total_length:.2f} cm")
+
 
 
 
