@@ -78,6 +78,44 @@ def detect_brick_size(img_np):
 
     return int(np.mean(widths)), int(np.mean(heights))
 
+
+
+# ----------- Clone Engineering Diagram Generator -----------
+def generate_clone_diagram(img_w, img_h, predictions, PIXEL_TO_CM_X, filename="clone_layout.png"):
+
+    canvas_img = np.ones((img_h, img_w, 3), dtype=np.uint8) * 255
+
+    for pred in predictions:
+        x = int(pred["x"])
+        y = int(pred["y"])
+        w = int(pred["width"])
+        h = int(pred["height"])
+
+        # longest dimension = pipe length
+        length_px = max(w, h)
+
+        # shortest dimension = pipe thickness
+        thickness_px = min(w, h)
+
+        x1 = int(x - length_px / 2)
+        x2 = int(x + length_px / 2)
+
+        # draw horizontal engineering pipe
+        cv2.line(canvas_img, (x1, y), (x2, y), (0,0,0), thickness_px)
+
+        length_cm = length_px * PIXEL_TO_CM_X
+        cv2.putText(canvas_img,
+                    f"{length_cm:.1f}cm",
+                    (x1, y - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.5,
+                    (0,0,0),
+                    1)
+
+    cv2.imwrite(filename, canvas_img)
+    return filename
+
+
 # ----------- UI -----------
 st.title("Wall Infrastructure Detection")
 
@@ -193,6 +231,21 @@ if st.button("Generate Architectural Layout"):
     )
     with open(pdf_file, "rb") as f:
         st.download_button("Download Architectural Layout", f, file_name=pdf_file)
+
+
+# ----------- Clone Layout Button -----------
+if st.button("Generate Clone Diagram"):
+    clone_file = generate_clone_diagram(
+        img_w,
+        img_h,
+        result["predictions"],
+        PIXEL_TO_CM_X
+    )
+
+    with open(clone_file, "rb") as f:
+        st.download_button("Download Clone Diagram", f, file_name=clone_file)
+
+
 
 
 
