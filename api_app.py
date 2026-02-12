@@ -160,7 +160,7 @@ def generate_wall_architecture_diagram(
     pipe_width_px = STANDARD_PIPE_CM / PIXEL_TO_CM_X
 
     # ---------- 1. DRAW GRID ----------
-    grid_spacing = 50   # pixels
+    grid_spacing = 50
     for x in range(0, img_w, grid_spacing):
         cv2.line(canvas_img, (x,0), (x,img_h), (220,220,220), 1)
     for y in range(0, img_h, grid_spacing):
@@ -172,7 +172,6 @@ def generate_wall_architecture_diagram(
                   (img_w-margin, img_h-margin), (0,0,0), 2)
 
     # ---------- 3. DIMENSION ARROWS ----------
-    # horizontal arrow
     cv2.arrowedLine(canvas_img,
                     (margin, img_h-margin+20),
                     (img_w-margin, img_h-margin+20),
@@ -182,7 +181,6 @@ def generate_wall_architecture_diagram(
                     (margin, img_h-margin+20),
                     (0,0,0), 2, tipLength=0.03)
 
-    # vertical arrow
     cv2.arrowedLine(canvas_img,
                     (margin-20, margin),
                     (margin-20, img_h-margin),
@@ -215,6 +213,8 @@ def generate_wall_architecture_diagram(
                 cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,0), 2)
 
     # ---------- 6. DRAW PIPES ----------
+    label_counter = 0
+
     for pred in predictions:
         x = int(pred["x"])
         y = int(pred["y"])
@@ -237,9 +237,13 @@ def generate_wall_architecture_diagram(
 
         cv2.rectangle(canvas_img, (x1,y1),(x2,y2),(0,0,0),-1)
 
+        # ---- stagger labels to avoid overlap ----
         length_cm = length_px * PIXEL_TO_CM_X
+        label_offset = (label_counter % 4) * 12
+        label_counter += 1
+
         cv2.putText(canvas_img, f"{length_cm:.1f}cm",
-                    (x1, max(10, y1 - 5)),
+                    (x1, max(10, y1 - 5 - label_offset)),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), 1)
 
     cv2.imwrite(filename, canvas_img)
@@ -439,6 +443,7 @@ if uploaded_file is not None:
 
 
     
+
 
 
 
