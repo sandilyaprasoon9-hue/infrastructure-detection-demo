@@ -243,22 +243,72 @@ def door_window_box_tool(image, PIXEL_TO_CM_X, PIXEL_TO_CM_Y):
 
 
 
-def generate_full_clone(img_w, img_h, predictions, door_items, PIXEL_TO_CM_X, filename="final_clone.png"):
+def generate_clone_diagram(img_w, img_h, predictions, PIXEL_TO_CM_X,
+                           wall_w_cm, wall_h_cm,
+                           filename="clone_layout.png"):
+
     canvas_img = np.ones((img_h, img_w, 3), dtype=np.uint8) * 255
 
-    # draw pipes
+    STANDARD_PIPE_CM = 4.0
+    pipe_width_px = STANDARD_PIPE_CM / PIXEL_TO_CM_X
+
+    # ---------- Draw wall boundary ----------
+    cv2.rectangle(canvas_img, (5,5), (img_w-5, img_h-5), (0,0,0), 2)
+
+    # ---------- Label wall dimensions ----------
+    cv2.putText(
+        canvas_img,
+        f"Wall Width: {wall_w_cm:.1f} cm",
+        (20, 25),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.6,
+        (0,0,0),
+        2
+    )
+
+    cv2.putText(
+        canvas_img,
+        f"Wall Height: {wall_h_cm:.1f} cm",
+        (20, 50),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.6,
+        (0,0,0),
+        2
+    )
+
+    # ---------- Draw standardized pipes ----------
     for pred in predictions:
         x = int(pred["x"])
         y = int(pred["y"])
         w = int(pred["width"])
         h = int(pred["height"])
 
-        x1 = int(x - w/2)
-        y1 = int(y - h/2)
-        x2 = int(x + w/2)
-        y2 = int(y + h/2)
+        length_px = max(w, h)
+        horizontal = w >= h
+
+        if horizontal:
+            x1 = int(x - length_px / 2)
+            x2 = int(x + length_px / 2)
+            y1 = int(y - pipe_width_px / 2)
+            y2 = int(y + pipe_width_px / 2)
+        else:
+            y1 = int(y - length_px / 2)
+            y2 = int(y + length_px / 2)
+            x1 = int(x - pipe_width_px / 2)
+            x2 = int(x + pipe_width_px / 2)
 
         cv2.rectangle(canvas_img, (x1,y1),(x2,y2),(0,0,0),-1)
+
+        length_cm = length_px * PIXEL_TO_CM_X
+        cv2.putText(
+            canvas_img,
+            f"{length_cm:.1f}cm",
+            (x1, max(10, y1 - 5)),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.5,
+            (0,0,0),
+            1
+        )
 
     cv2.imwrite(filename, canvas_img)
     return filename
@@ -418,8 +468,11 @@ if uploaded_file is not None:
             img_w,
             img_h,
             result["predictions"],
-            PIXEL_TO_CM_X
+            PIXEL_TO_CM_X,
+            wall_width_cm if mode == "Manual Wall Dimensions" else img_w * PIXEL_TO_CM_X,
+            wall_height_cm if mode == "Manual Wall Dimensions" else img_h * PIXEL_TO_CM_Y
         )
+
 
         with open(clone_file, "rb") as f:
             st.download_button("Download Clone Diagram", f, file_name=clone_file)
@@ -436,6 +489,7 @@ if uploaded_file is not None:
 
         with open(final_file,"rb") as f:
             st.download_button("Download Final Drawing", f, file_name=final_file)
+
 
 
 
