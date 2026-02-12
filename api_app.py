@@ -220,6 +220,11 @@ if uploaded_file is not None:
     # --- Step 1: Crop wall ---
     cropped_image = crop_wall_image(original_image)
 
+    if cropped_image is None:
+    st.warning("Please crop the wall area first")
+    st.stop()
+
+
     
 
 
@@ -351,8 +356,8 @@ if uploaded_file is not None:
         with open(clone_file, "rb") as f:
             st.download_button("Download Clone Diagram", f, file_name=clone_file)
 
-# ----------- Final Engineering Drawing -----------
-if st.button("Generate Final Engineering Drawing"):
+    # ----------- Final Engineering Drawing -----------
+    if st.button("Generate Final Engineering Drawing"):
     final_file = generate_full_clone(
         img_w,
         img_h,
@@ -368,6 +373,10 @@ if st.button("Generate Final Engineering Drawing"):
 
 
 
+
+
+
+
     
     
 
@@ -375,6 +384,7 @@ if st.button("Generate Final Engineering Drawing"):
     
 
     
+
 
 
 
