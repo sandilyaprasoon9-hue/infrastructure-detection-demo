@@ -349,8 +349,8 @@ if uploaded_file is not None:
         with open(clone_file, "rb") as f:
             st.download_button("Download Clone Diagram", f, file_name=clone_file)
 
-    # ----------- Final Engineering Drawing -----------
-    if st.button("Generate Final Engineering Drawing"):
+# ----------- Final Engineering Drawing -----------
+if st.button("Generate Final Engineering Drawing"):
     final_file = generate_full_clone(
         img_w,
         img_h,
@@ -359,12 +359,21 @@ if uploaded_file is not None:
         PIXEL_TO_CM_X
     )
 
-        with open(final_file,"rb") as f:
-            st.download_button("Download Final Drawing", f, file_name=final_file)
+    with open(final_file,"rb") as f:
+        st.download_button("Download Final Drawing", f, file_name=final_file)
+
+
+
+
+
+    
+    
+
 
     
 
     
+
 
 
 
