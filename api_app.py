@@ -487,6 +487,13 @@ if uploaded_file is not None:
             "width_cm": w_cm,
             "height_cm": h_cm
         })
+        # -------- compute wall dimensions in cm --------
+        if mode == "Manual Wall Dimensions":
+            wall_w = wall_width_cm
+            wall_h = wall_height_cm
+        else:
+            wall_w = img_w * PIXEL_TO_CM_X
+            wall_h = img_h * PIXEL_TO_CM_Y
 
             
 
@@ -501,8 +508,6 @@ if uploaded_file is not None:
             wall_h,
             door_items
         )
-
-
 
         with open(clone_file, "rb") as f:
             st.download_button("Download Clone Diagram", f, file_name=clone_file)
@@ -519,6 +524,7 @@ if uploaded_file is not None:
 
         with open(final_file,"rb") as f:
             st.download_button("Download Final Drawing", f, file_name=final_file)
+
 
 
 
