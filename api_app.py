@@ -117,6 +117,76 @@ def generate_clone_diagram(img_w, img_h, predictions, PIXEL_TO_CM_X, filename="c
     cv2.imwrite(filename, canvas_img)
     return filename
 
+
+
+
+
+from streamlit_cropper import st_cropper
+
+def crop_wall_image(image):
+    st.subheader("Crop Wall Area")
+    cropped_img = st_cropper(image, realtime_update=True, box_color='blue')
+    return cropped_img
+
+
+from streamlit_drawable_canvas import st_canvas
+
+def polygon_label_tool(image):
+    st.subheader("Label Doors / Windows / Switches")
+
+    canvas_result = st_canvas(
+        fill_color="rgba(255, 0, 0, 0.3)",
+        stroke_width=2,
+        stroke_color="red",
+        background_image=image,
+        update_streamlit=True,
+        height=image.height,
+        width=image.width,
+        drawing_mode="polygon",
+        key="canvas",
+    )
+
+    polygons = []
+
+    if canvas_result.json_data is not None:
+        for obj in canvas_result.json_data["objects"]:
+            polygons.append(obj["path"])
+
+    return polygons
+
+
+
+
+def generate_full_clone(img_w, img_h, predictions, polygons, PIXEL_TO_CM_X, filename="final_clone.png"):
+    canvas_img = np.ones((img_h, img_w, 3), dtype=np.uint8) * 255
+
+    # draw pipes
+    for pred in predictions:
+        x = int(pred["x"])
+        y = int(pred["y"])
+        w = int(pred["width"])
+        h = int(pred["height"])
+
+        x1 = int(x - w/2)
+        y1 = int(y - h/2)
+        x2 = int(x + w/2)
+        y2 = int(y + h/2)
+
+        cv2.rectangle(canvas_img, (x1,y1),(x2,y2),(0,0,0),-1)
+
+    # draw polygon items (doors/windows)
+    for poly in polygons:
+        pts = []
+        for p in poly:
+            if len(p) >= 3:
+                pts.append([int(p[1]), int(p[2])])
+        if len(pts) > 2:
+            cv2.polylines(canvas_img,[np.array(pts)],True,(0,0,255),2)
+
+    cv2.imwrite(filename, canvas_img)
+    return filename
+
+
 # ----------- UI -----------
 st.title("Wall Infrastructure Detection")
 
@@ -126,7 +196,15 @@ if uploaded_file is not None:
 
     uploaded_file.seek(0)
     image = Image.open(uploaded_file)
-    st.image(image, caption="Uploaded Image", use_column_width=True)
+
+    # Step 1: Crop wall
+    image = crop_wall_image(image)
+
+    # Step 2: Label windows / doors / switches
+    polygons = polygon_label_tool(image)
+
+    st.image(image, caption="Processed Image", use_column_width=True)
+
 
     img_np = np.array(image)
     img_h, img_w = img_np.shape[:2]
@@ -249,7 +327,22 @@ if uploaded_file is not None:
         with open(clone_file, "rb") as f:
             st.download_button("Download Clone Diagram", f, file_name=clone_file)
 
+    # ----------- Final Engineering Drawing -----------
+    if st.button("Generate Final Engineering Drawing"):
+        final_file = generate_full_clone(
+            img_w,
+            img_h,
+            result["predictions"],
+            polygons,
+            PIXEL_TO_CM_X
+        )
+        with open(final_file,"rb") as f:
+            st.download_button("Download Final Drawing", f, file_name=final_file)
+
     
+
+    
+
 
 
 
