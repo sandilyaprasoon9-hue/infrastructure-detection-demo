@@ -183,7 +183,7 @@ def door_window_box_tool(image, PIXEL_TO_CM_X, PIXEL_TO_CM_Y):
 
 
 
-def generate_full_clone(img_w, img_h, predictions, polygons, PIXEL_TO_CM_X, filename="final_clone.png"):
+def generate_full_clone(img_w, img_h, predictions, door_items, PIXEL_TO_CM_X, filename="final_clone.png"):
     canvas_img = np.ones((img_h, img_w, 3), dtype=np.uint8) * 255
 
     # draw pipes
@@ -200,17 +200,9 @@ def generate_full_clone(img_w, img_h, predictions, polygons, PIXEL_TO_CM_X, file
 
         cv2.rectangle(canvas_img, (x1,y1),(x2,y2),(0,0,0),-1)
 
-    # draw polygon items (doors/windows)
-    for poly in polygons:
-        pts = []
-        for p in poly:
-            if len(p) >= 3:
-                pts.append([int(p[1]), int(p[2])])
-        if len(pts) > 2:
-            cv2.polylines(canvas_img,[np.array(pts)],True,(0,0,255),2)
-
     cv2.imwrite(filename, canvas_img)
     return filename
+
 
 
 # ----------- UI -----------
@@ -372,6 +364,7 @@ if uploaded_file is not None:
     
 
     
+
 
 
 
