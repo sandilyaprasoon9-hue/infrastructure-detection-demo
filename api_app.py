@@ -143,44 +143,46 @@ from streamlit_drawable_canvas import st_canvas
 
 
 
-from streamlit_drawable_canvas import st_canvas
-
 def door_window_box_tool(image, PIXEL_TO_CM_X, PIXEL_TO_CM_Y):
+
     st.subheader("Mark Doors / Windows / Gates")
 
-    # Ensure RGB PIL image
-    img = image.convert("RGB")
+    st.write("Click TOP-LEFT and then BOTTOM-RIGHT of door/window")
 
-    canvas_result = st_canvas(
-        fill_color="rgba(0, 0, 255, 0.2)",
-        stroke_width=2,
-        stroke_color="blue",
-        background_image=img,
-        update_streamlit=True,
-        height=img.size[1],
-        width=img.size[0],
-        drawing_mode="rect",
-        key="box_canvas",
-    )
+    if "points" not in st.session_state:
+        st.session_state.points = []
+
+    img_np = np.array(image)
+
+    click = st.image(img_np, use_column_width=True)
+
+    x = st.number_input("X coordinate", step=1)
+    y = st.number_input("Y coordinate", step=1)
+
+    if st.button("Add Point"):
+        st.session_state.points.append((x, y))
 
     items = []
 
-    if canvas_result.json_data is not None:
-        for obj in canvas_result.json_data["objects"]:
-            w_px = obj.get("width", 0)
-            h_px = obj.get("height", 0)
+    if len(st.session_state.points) >= 2:
+        p1 = st.session_state.points[-2]
+        p2 = st.session_state.points[-1]
 
-            w_cm = w_px * PIXEL_TO_CM_X
-            h_cm = h_px * PIXEL_TO_CM_Y
+        w_px = abs(p2[0] - p1[0])
+        h_px = abs(p2[1] - p1[1])
 
-            items.append({
-                "width_cm": w_cm,
-                "height_cm": h_cm
-            })
+        w_cm = w_px * PIXEL_TO_CM_X
+        h_cm = h_px * PIXEL_TO_CM_Y
 
-            st.write(f"Item → Width: {w_cm:.2f} cm | Height: {h_cm:.2f} cm")
+        st.write(f"Door/Window → Width: {w_cm:.2f} cm | Height: {h_cm:.2f} cm")
 
-    return
+        items.append({
+            "width_cm": w_cm,
+            "height_cm": h_cm
+        })
+
+    return items
+
 
 
 
@@ -376,6 +378,7 @@ if st.button("Generate Final Engineering Drawing"):
     
 
     
+
 
 
 
