@@ -92,25 +92,27 @@ def generate_clone_diagram(img_w, img_h, predictions, PIXEL_TO_CM_X, filename="c
         h = int(pred["height"])
 
         # longest dimension = pipe length
-        length_px = max(w, h)
+        # compute rectangle corners (true pipe box)
+x1 = int(x - w/2)
+y1 = int(y - h/2)
+x2 = int(x + w/2)
+y2 = int(y + h/2)
 
-        # shortest dimension = pipe thickness
-        thickness_px = min(w, h)
+# draw filled pipe box (engineering clone)
+cv2.rectangle(canvas_img, (x1, y1), (x2, y2), (0,0,0), -1)
 
-        x1 = int(x - length_px / 2)
-        x2 = int(x + length_px / 2)
+# label length using longest dimension
+length_px = max(w, h)
+length_cm = length_px * PIXEL_TO_CM_X
 
-        # draw horizontal engineering pipe
-        cv2.line(canvas_img, (x1, y), (x2, y), (0,0,0), thickness_px)
+cv2.putText(canvas_img,
+            f"{length_cm:.1f}cm",
+            (x1, y1 - 5),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.5,
+            (0,0,0),
+            1)
 
-        length_cm = length_px * PIXEL_TO_CM_X
-        cv2.putText(canvas_img,
-                    f"{length_cm:.1f}cm",
-                    (x1, y - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.5,
-                    (0,0,0),
-                    1)
 
     cv2.imwrite(filename, canvas_img)
     return filename
@@ -249,6 +251,7 @@ if uploaded_file is not None:
             st.download_button("Download Clone Diagram", f, file_name=clone_file)
 
     
+
 
 
 
