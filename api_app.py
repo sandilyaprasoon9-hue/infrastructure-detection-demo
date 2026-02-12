@@ -140,41 +140,7 @@ from streamlit_drawable_canvas import st_canvas
 
 
 
-from streamlit_drawable_canvas import st_canvas
 
-def door_window_box_tool(image, PIXEL_TO_CM_X, PIXEL_TO_CM_Y):
-    st.subheader("Draw rectangle over Door / Window / Gate")
-
-    canvas_result = st_canvas(
-        fill_color="rgba(0, 0, 255, 0.2)",
-        stroke_width=2,
-        stroke_color="blue",
-        background_image=image,
-        update_streamlit=True,
-        height=image.height,
-        width=image.width,
-        drawing_mode="rect",
-        key="door_canvas",
-    )
-
-    items = []
-
-    if canvas_result.json_data is not None:
-        for obj in canvas_result.json_data["objects"]:
-            w_px = obj["width"]
-            h_px = obj["height"]
-
-            w_cm = w_px * PIXEL_TO_CM_X
-            h_cm = h_px * PIXEL_TO_CM_Y
-
-            st.write(f"Door/Window → Width: {w_cm:.2f} cm | Height: {h_cm:.2f} cm")
-
-            items.append({
-                "width_cm": w_cm,
-                "height_cm": h_cm
-            })
-
-    return items
 
 
 
@@ -336,13 +302,7 @@ if uploaded_file is not None:
 
     st.write(f"Pixel→CM X: {PIXEL_TO_CM_X:.4f}")
     st.write(f"Pixel→CM Y: {PIXEL_TO_CM_Y:.4f}")
-    st.subheader("Draw rectangle over Doors / Windows")
-
-    door_items = door_window_box_tool(
-        cropped_image.convert("RGB"),
-        PIXEL_TO_CM_X,
-        PIXEL_TO_CM_Y
-    )
+    
 
     
 
@@ -445,7 +405,7 @@ if uploaded_file is not None:
             PIXEL_TO_CM_X,
             wall_w,
             wall_h,
-            door_items
+            
         )
 
         with open(arch_file, "rb") as f:
@@ -457,6 +417,7 @@ if uploaded_file is not None:
 
 
     
+
 
 
 
