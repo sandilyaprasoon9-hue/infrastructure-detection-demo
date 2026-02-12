@@ -245,6 +245,7 @@ def door_window_box_tool(image, PIXEL_TO_CM_X, PIXEL_TO_CM_Y):
 
 def generate_clone_diagram(img_w, img_h, predictions, PIXEL_TO_CM_X,
                            wall_w_cm, wall_h_cm,
+                           door_items=None,
                            filename="clone_layout.png"):
 
     canvas_img = np.ones((img_h, img_w, 3), dtype=np.uint8) * 255
@@ -256,25 +257,11 @@ def generate_clone_diagram(img_w, img_h, predictions, PIXEL_TO_CM_X,
     cv2.rectangle(canvas_img, (5,5), (img_w-5, img_h-5), (0,0,0), 2)
 
     # ---------- Label wall dimensions ----------
-    cv2.putText(
-        canvas_img,
-        f"Wall Width: {wall_w_cm:.1f} cm",
-        (20, 25),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        0.6,
-        (0,0,0),
-        2
-    )
+    cv2.putText(canvas_img, f"Wall Width: {wall_w_cm:.1f} cm",
+                (20, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,0), 2)
 
-    cv2.putText(
-        canvas_img,
-        f"Wall Height: {wall_h_cm:.1f} cm",
-        (20, 50),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        0.6,
-        (0,0,0),
-        2
-    )
+    cv2.putText(canvas_img, f"Wall Height: {wall_h_cm:.1f} cm",
+                (20, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,0), 2)
 
     # ---------- Draw standardized pipes ----------
     for pred in predictions:
@@ -300,15 +287,29 @@ def generate_clone_diagram(img_w, img_h, predictions, PIXEL_TO_CM_X,
         cv2.rectangle(canvas_img, (x1,y1),(x2,y2),(0,0,0),-1)
 
         length_cm = length_px * PIXEL_TO_CM_X
-        cv2.putText(
-            canvas_img,
-            f"{length_cm:.1f}cm",
-            (x1, max(10, y1 - 5)),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.5,
-            (0,0,0),
-            1
-        )
+        cv2.putText(canvas_img, f"{length_cm:.1f}cm",
+                    (x1, max(10, y1 - 5)),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), 1)
+
+    # ---------- Draw doors/windows (optional) ----------
+    if door_items:
+        for d in door_items:
+
+            x = int(d["x_cm"] / PIXEL_TO_CM_X)
+            y = int(d["y_cm"] / PIXEL_TO_CM_X)
+            w = int(d["width_cm"] / PIXEL_TO_CM_X)
+            h = int(d["height_cm"] / PIXEL_TO_CM_X)
+
+            x1 = int(x - w/2)
+            y1 = int(y - h/2)
+            x2 = int(x + w/2)
+            y2 = int(y + h/2)
+
+            cv2.rectangle(canvas_img, (x1,y1),(x2,y2),(0,0,0),2)
+
+            cv2.putText(canvas_img, "Door/Window",
+                        (x1, max(10, y1 - 5)),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0,0,0), 1)
 
     cv2.imwrite(filename, canvas_img)
     return filename
@@ -452,6 +453,30 @@ if uploaded_file is not None:
 
     st.write(f"Total Pipe Length: {total_length:.2f} cm")
 
+
+
+    st.subheader("Add Door / Window (Optional)")
+
+    door_items = []
+
+    num_items = st.number_input("Number of Doors/Windows", min_value=0, step=1)
+
+    for i in range(int(num_items)):
+        st.write(f"Item {i+1}")
+
+        x_cm = st.number_input(f"X position (cm) {i}", key=f"x{i}")
+        y_cm = st.number_input(f"Y position (cm) {i}", key=f"y{i}")
+        w_cm = st.number_input(f"Width (cm) {i}", key=f"w{i}")
+        h_cm = st.number_input(f"Height (cm) {i}", key=f"h{i}")
+
+        door_items.append({
+            "x_cm": x_cm,
+            "y_cm": y_cm,
+            "width_cm": w_cm,
+            "height_cm": h_cm
+        })
+
+
     # ----------- Architectural Layout Button -----------
     if st.button("Generate Architectural Layout"):
         pdf_file = generate_architecture_diagram(
@@ -461,6 +486,7 @@ if uploaded_file is not None:
         )
         with open(pdf_file, "rb") as f:
             st.download_button("Download Architectural Layout", f, file_name=pdf_file)
+            
 
     # ----------- Clone Layout Button -----------
     if st.button("Generate Clone Diagram"):
@@ -469,9 +495,11 @@ if uploaded_file is not None:
             img_h,
             result["predictions"],
             PIXEL_TO_CM_X,
-            wall_width_cm if mode == "Manual Wall Dimensions" else img_w * PIXEL_TO_CM_X,
-            wall_height_cm if mode == "Manual Wall Dimensions" else img_h * PIXEL_TO_CM_Y
+            wall_w,
+            wall_h,
+            door_items
         )
+
 
 
         with open(clone_file, "rb") as f:
@@ -489,6 +517,7 @@ if uploaded_file is not None:
 
         with open(final_file,"rb") as f:
             st.download_button("Download Final Drawing", f, file_name=final_file)
+
 
 
 
