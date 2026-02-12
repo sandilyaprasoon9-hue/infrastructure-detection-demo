@@ -239,12 +239,26 @@ def generate_wall_architecture_diagram(
 
         # ---- stagger labels to avoid overlap ----
         length_cm = length_px * PIXEL_TO_CM_X
-        label_offset = (label_counter % 4) * 12
+
+        # ---- place label outside pipe ----
+        label_offset = (label_counter % 6) * 15
         label_counter += 1
 
+        label_x = x2 + 15
+        label_y = y1 - 5 - label_offset
+
+        # leader line
+        cv2.line(canvas_img,
+             (int((x1+x2)/2), int((y1+y2)/2)),
+             (label_x-5, label_y+5),
+             (0,0,0), 1)
+
+        # label text
         cv2.putText(canvas_img, f"{length_cm:.1f}cm",
-                    (x1, max(10, y1 - 5 - label_offset)),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), 1)
+                (label_x, label_y),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), 1)
+
+
 
     cv2.imwrite(filename, canvas_img)
     return filename
@@ -444,6 +458,7 @@ if uploaded_file is not None:
 
 
     
+
 
 
 
