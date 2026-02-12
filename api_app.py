@@ -435,8 +435,10 @@ if uploaded_file is not None:
             
 
     # ----------- Clone Layout Button -----------
+    # ----------- Wall Architecture Diagram -----------
     if st.button("Generate Wall Architecture Diagram"):
-        clone_file = generate_wall_architecture_diagram(
+
+        arch_file = generate_wall_architecture_diagram(
             img_w,
             img_h,
             result["predictions"],
@@ -446,10 +448,16 @@ if uploaded_file is not None:
             door_items
         )
 
-        with open(clone_file, "rb") as f:
-            st.download_button("Download Wall Architecture Diagram", f, file_name=arch_file)
+        with open(arch_file, "rb") as f:
+            st.download_button(
+                "Download Wall Architecture Diagram",
+                f,
+                file_name=arch_file
+            )
+
 
     
+
 
 
 
