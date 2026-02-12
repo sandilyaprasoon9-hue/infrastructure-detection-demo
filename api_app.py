@@ -224,17 +224,24 @@ if uploaded_file is not None:
         st.session_state.cropped_done = False
         st.session_state.cropped_image = None
 
-    temp_crop = crop_wall_image(original_image)
-
-    if st.button("Confirm Crop"):
-        st.session_state.cropped_image = temp_crop
-        st.session_state.cropped_done = True
-
+    # ---------- run cropper ONLY before confirm ----------
     if not st.session_state.cropped_done:
+        temp_crop = crop_wall_image(original_image)
+
+        if st.button("Confirm Crop"):
+            st.session_state.cropped_image = temp_crop
+            st.session_state.cropped_done = True
+            st.rerun()
+
         st.info("Crop the wall and press Confirm Crop")
         st.stop()
 
+    # ---------- after confirm ----------
     cropped_image = st.session_state.cropped_image.convert("RGB")
+
+    st.success("Wall cropped successfully")
+    st.image(cropped_image, caption="Cropped Wall", use_column_width=True)
+
 
     st.success("Wall cropped successfully")
     st.image(cropped_image, caption="Cropped Wall", use_column_width=True)
@@ -401,6 +408,7 @@ if uploaded_file is not None:
     
 
     
+
 
 
 
