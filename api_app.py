@@ -431,6 +431,7 @@ if uploaded_file is not None:
             PIXEL_TO_CM_X,
             wall_w,
             wall_h,
+            []
             
         )
 
@@ -443,6 +444,7 @@ if uploaded_file is not None:
 
 
     
+
 
 
 
