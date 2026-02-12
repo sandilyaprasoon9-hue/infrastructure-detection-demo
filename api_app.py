@@ -85,29 +85,43 @@ def generate_clone_diagram(img_w, img_h, predictions, PIXEL_TO_CM_X, filename="c
 
     canvas_img = np.ones((img_h, img_w, 3), dtype=np.uint8) * 255
 
+    STANDARD_PIPE_CM = 4.0
+    pipe_width_px = STANDARD_PIPE_CM / PIXEL_TO_CM_X   # convert 4cm → pixels
+
     for pred in predictions:
         x = int(pred["x"])
         y = int(pred["y"])
         w = int(pred["width"])
         h = int(pred["height"])
 
-        # compute rectangle corners (true pipe box)
-        x1 = int(x - w/2)
-        y1 = int(y - h/2)
-        x2 = int(x + w/2)
-        y2 = int(y + h/2)
+        # -------- determine true pipe length ----------
+        length_px = max(w, h)
 
-        # draw filled pipe box (engineering clone)
+        # -------- determine orientation ----------
+        horizontal = w >= h
+
+        if horizontal:
+            x1 = int(x - length_px / 2)
+            x2 = int(x + length_px / 2)
+
+            y1 = int(y - pipe_width_px / 2)
+            y2 = int(y + pipe_width_px / 2)
+        else:
+            y1 = int(y - length_px / 2)
+            y2 = int(y + length_px / 2)
+
+            x1 = int(x - pipe_width_px / 2)
+            x2 = int(x + pipe_width_px / 2)
+
+        # draw standardized pipe
         cv2.rectangle(canvas_img, (x1, y1), (x2, y2), (0,0,0), -1)
 
-        # label length using longest dimension
-        length_px = max(w, h)
+        # label length
         length_cm = length_px * PIXEL_TO_CM_X
-
         cv2.putText(
             canvas_img,
             f"{length_cm:.1f}cm",
-            (x1, max(0, y1 - 5)),
+            (x1, max(10, y1 - 5)),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.5,
             (0,0,0),
@@ -378,6 +392,7 @@ if uploaded_file is not None:
 
         with open(final_file,"rb") as f:
             st.download_button("Download Final Drawing", f, file_name=final_file)
+
 
 
 
