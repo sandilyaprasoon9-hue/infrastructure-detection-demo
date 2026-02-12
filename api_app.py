@@ -148,29 +148,24 @@ from streamlit_drawable_canvas import st_canvas
 def door_window_box_tool(image, PIXEL_TO_CM_X, PIXEL_TO_CM_Y):
     st.subheader("Draw rectangle over Door / Window / Gate")
 
-    # Convert safely to numpy and back (fixes blank canvas issue)
-    img_np = np.array(image)
-    bg_img = Image.fromarray(img_np)
-
     canvas_result = st_canvas(
         fill_color="rgba(0, 0, 255, 0.2)",
         stroke_width=2,
         stroke_color="blue",
-        background_image=bg_img,
+        background_image=image,
         update_streamlit=True,
-        height=img_np.shape[0],
-        width=img_np.shape[1],
+        height=image.height,
+        width=image.width,
         drawing_mode="rect",
-        key="door_canvas_unique"
+        key="door_canvas",
     )
 
     items = []
 
     if canvas_result.json_data is not None:
         for obj in canvas_result.json_data["objects"]:
-            w_px = obj["width"] * obj.get("scaleX", 1)
-            h_px = obj["height"] * obj.get("scaleY", 1)
-
+            w_px = obj["width"]
+            h_px = obj["height"]
 
             w_cm = w_px * PIXEL_TO_CM_X
             h_cm = h_px * PIXEL_TO_CM_Y
@@ -183,6 +178,13 @@ def door_window_box_tool(image, PIXEL_TO_CM_X, PIXEL_TO_CM_Y):
             })
 
     return items
+
+
+
+
+
+
+
 def generate_full_clone(img_w, img_h, predictions, door_items, PIXEL_TO_CM_X, filename="final_clone.png"):
     canvas_img = np.ones((img_h, img_w, 3), dtype=np.uint8) * 255
 
@@ -220,33 +222,16 @@ if uploaded_file is not None:
 
     st.subheader("Step 1: Crop Wall")
 
-    # initialize session state
-    if "cropped_done" not in st.session_state:
-        st.session_state.cropped_done = False
-        st.session_state.cropped_image = None
+    cropped_image = crop_wall_image(original_image)
 
-    # ---------- run cropper ONLY before confirm ----------
-    if not st.session_state.cropped_done:
-        temp_crop = crop_wall_image(original_image)
-
-        if st.button("Confirm Crop"):
-            st.session_state.cropped_image = temp_crop
-            st.session_state.cropped_done = True
-            st.rerun()
-
-        st.info("Crop the wall and press Confirm Crop")
+    if cropped_image is None:
+        st.info("Adjust the crop box to continue")
         st.stop()
 
-    # ---------- after confirm ----------
-    cropped_image = st.session_state.cropped_image.convert("RGB")
+    cropped_image = cropped_image.convert("RGB")
 
     st.success("Wall cropped successfully")
     st.image(cropped_image, caption="Cropped Wall", use_column_width=True)
-
-
-    st.success("Wall cropped successfully")
-    st.image(cropped_image, caption="Cropped Wall", use_column_width=True)
-
 
     # Convert to numpy AFTER cropping
     img_np = np.array(cropped_image)
@@ -393,53 +378,6 @@ if uploaded_file is not None:
 
         with open(final_file,"rb") as f:
             st.download_button("Download Final Drawing", f, file_name=final_file)
-
-
-
-
-
-
-    
-    
-
-
-    
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
