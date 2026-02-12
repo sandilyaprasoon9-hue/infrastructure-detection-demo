@@ -213,8 +213,7 @@ def generate_wall_architecture_diagram(
                 cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,0), 2)
 
     # ---------- 6. DRAW PIPES ----------
-    # ---------- 6. DRAW PIPES ----------
-   # ---------- 6. DRAW PIPES ----------
+     # ---------- 6. DRAW PIPES ----------
     label_counter = 0
 
     for pred in predictions:
@@ -237,46 +236,32 @@ def generate_wall_architecture_diagram(
             x1 = int(x - pipe_width_px/2)
             x2 = int(x + pipe_width_px/2)
 
-        # ---- draw pipe in light color ----
-        cv2.rectangle(canvas_img, (x1,y1),(x2,y2),(200,200,200),-1)
+        # ---- draw pipe (light blue) ----
+        cv2.rectangle(canvas_img, (x1,y1),(x2,y2),(255,200,150),-1)
 
         # ---- dimension label ----
         length_cm = length_px * PIXEL_TO_CM_X
-        label_offset = (label_counter % 4) * 12
-        label_counter += 1
 
-        cv2.putText(canvas_img, f"{length_cm:.1f}cm",
-                    (x1, max(15, y1 - 5 - label_offset)),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.45,        # smaller text
-                    (0,0,0),     # sharp black
-                    1)
-
-
-        # ---- draw pipe AFTER text ----
-        cv2.rectangle(canvas_img, (x1,y1),(x2,y2),(0,0,0),-1)
-
-
-        # ---- stagger labels to avoid overlap ----
-        length_cm = length_px * PIXEL_TO_CM_X
-
-        # ---- place label outside pipe ----
         label_offset = (label_counter % 6) * 15
         label_counter += 1
 
-        label_x = x2 + 15
-        label_y = y1 - 5 - label_offset
+        label_x = max(5, min(x2 + 10, img_w - 120))
+        label_y = max(20, min(y1 - 5 - label_offset, img_h - 10))
 
         # leader line
         cv2.line(canvas_img,
-             (int((x1+x2)/2), int((y1+y2)/2)),
-             (label_x-5, label_y+5),
-             (0,0,0), 1)
+                 (int((x1+x2)/2), int((y1+y2)/2)),
+                 (label_x-5, label_y+5),
+                 (0,0,0), 1)
 
         # label text
         cv2.putText(canvas_img, f"{length_cm:.1f}cm",
-                (label_x, label_y),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), 1)
+                    (label_x, label_y),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.45,
+                    (0,0,0),
+                    1)
+
 
 
 
@@ -478,6 +463,7 @@ if uploaded_file is not None:
 
 
     
+
 
 
 
