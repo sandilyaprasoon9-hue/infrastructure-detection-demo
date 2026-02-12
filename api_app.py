@@ -299,6 +299,31 @@ def generate_wall_architecture_diagram(
                     0.45,
                     (0,0,0),
                     1)
+            # ---------- DRAW DOORS / WINDOWS ----------
+    if door_items:
+        for d in door_items:
+            x = int(d["x_cm"] / PIXEL_TO_CM_X) + margin
+            y = int(d["y_cm"] / PIXEL_TO_CM_X) + margin
+            w = int(d["width_cm"] / PIXEL_TO_CM_X)
+            h = int(d["height_cm"] / PIXEL_TO_CM_X)
+
+            x1 = int(x - w/2)
+            y1 = int(y - h/2)
+            x2 = int(x + w/2)
+            y2 = int(y + h/2)
+
+            cv2.rectangle(canvas_img, (x1, y1), (x2, y2), (0,0,255), 2)
+
+            cv2.putText(
+                canvas_img,
+                "Door/Window",
+                (x1, max(15, y1 - 5)),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.4,
+                (0,0,255),
+                1
+            )
+
 
 
     cv2.imwrite(filename, canvas_img)
@@ -486,7 +511,7 @@ if uploaded_file is not None:
             PIXEL_TO_CM_X,
             wall_w,
             wall_h,
-            []
+            door_items
             
         )
 
@@ -496,6 +521,7 @@ if uploaded_file is not None:
                 f,
                 file_name=arch_file
             )
+
 
 
 
