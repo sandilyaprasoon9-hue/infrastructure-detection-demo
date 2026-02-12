@@ -127,20 +127,27 @@ def crop_wall_image(image):
     st.subheader("Crop Wall Area")
 
     cropped_img = st_cropper(
-        image,
+        image.convert("RGB"),
         realtime_update=True,
         box_color="blue",
         aspect_ratio=None
     )
 
-    return cropped_img
+    return cropped_img.convert("RGB")
+
 
 
 
 from streamlit_drawable_canvas import st_canvas
 
+
+
+
 def polygon_label_tool(image):
     st.subheader("Label Doors / Windows / Switches")
+
+    # ensure correct PIL format for canvas
+    image = image.convert("RGB")
 
     canvas_result = st_canvas(
         fill_color="rgba(255, 0, 0, 0.3)",
@@ -148,8 +155,8 @@ def polygon_label_tool(image):
         stroke_color="red",
         background_image=image,
         update_streamlit=True,
-        height=image.height,
-        width=image.width,
+        height=image.size[1],
+        width=image.size[0],
         drawing_mode="polygon",
         key="canvas",
     )
@@ -158,9 +165,11 @@ def polygon_label_tool(image):
 
     if canvas_result.json_data is not None:
         for obj in canvas_result.json_data["objects"]:
-            polygons.append(obj["path"])
+            if "path" in obj:
+                polygons.append(obj["path"])
 
     return polygons
+
 
 
 
@@ -351,6 +360,7 @@ if uploaded_file is not None:
     
 
     
+
 
 
 
