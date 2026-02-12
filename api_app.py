@@ -219,9 +219,11 @@ if uploaded_file is not None:
 
         st.write(f"{label} | Length: {length_cm:.2f} cm | Diameter: {STANDARD_PIPE_CM:.2f} cm")
 
-    st.image(img_np, caption="Detected Objects")
-        st.subheader("Summary")
+        st.image(img_np, caption="Detected Objects")
+
+    st.subheader("Summary")
     st.write(f"Total Pipes: {pipe_count}")
+
     st.write(f"Total Pipe Length: {total_length:.2f} cm")
 
     # ----------- Architectural Layout Button -----------
@@ -247,5 +249,6 @@ if uploaded_file is not None:
             st.download_button("Download Clone Diagram", f, file_name=clone_file)
 
     
+
 
 
