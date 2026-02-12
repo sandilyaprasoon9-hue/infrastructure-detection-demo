@@ -148,45 +148,13 @@ from streamlit_drawable_canvas import st_canvas
 def door_window_box_tool(image, PIXEL_TO_CM_X, PIXEL_TO_CM_Y):
     st.subheader("Draw rectangle over Door / Window / Gate")
 
-    # Convert safely to numpy and back (fixes blank canvas issue)
-    img_np = np.array(image).copy()
-    bg_img = Image.fromarray(img_np).convert("RGB")
+    # convert to numpy
+    img_np = np.array(image)
 
+    # ---- IMPORTANT: recreate image from buffer ----
+    _, png_buffer = cv2.imencode(".png", cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR))
+    bg_img = Image.open(io.BytesIO(png_buffer.tobytes())).convert("RGB")
 
-    canvas_result = st_canvas(
-        fill_color="rgba(0, 0, 255, 0.2)",
-        stroke_width=2,
-        stroke_color="blue",
-        background_image=bg_img,
-        update_streamlit=True,
-        height=img_np.shape[0],
-        width=img_np.shape[1],
-        drawing_mode="rect",
-        display_toolbar=True,
-        key=f"door_canvas_{image.size[0]}_{image.size[1]}"
-    )
-
-
-    items = []
-
-    if canvas_result.json_data is not None:
-        for obj in canvas_result.json_data["objects"]:
-            w_px = obj["width"] * obj.get("scaleX", 1)
-            h_px = obj["height"] * obj.get("scaleY", 1)
-
-
-
-            w_cm = w_px * PIXEL_TO_CM_X
-            h_cm = h_px * PIXEL_TO_CM_Y
-
-            st.write(f"Door/Window → Width: {w_cm:.2f} cm | Height: {h_cm:.2f} cm")
-
-            items.append({
-                "width_cm": w_cm,
-                "height_cm": h_cm
-            })
-
-    return items
 def generate_full_clone(img_w, img_h, predictions, door_items, PIXEL_TO_CM_X, filename="final_clone.png"):
     canvas_img = np.ones((img_h, img_w, 3), dtype=np.uint8) * 255
 
@@ -413,6 +381,7 @@ if uploaded_file is not None:
     
 
     
+
 
 
 
