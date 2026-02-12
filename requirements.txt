@@ -5,6 +5,8 @@ numpy
 Pillow
 reportlab
 streamlit-drawable-canvas
+streamlit-cropper
+streamlit-drawable-canvas
 
 
 
