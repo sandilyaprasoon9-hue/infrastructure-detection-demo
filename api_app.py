@@ -291,8 +291,7 @@ if uploaded_file is not None:
         PIXEL_TO_CM_Y
     )
 
-    # --- Step 2: Mark doors/windows after calibration ---
-    door_items = door_window_box_tool(cropped_image, PIXEL_TO_CM_X, PIXEL_TO_CM_Y)
+    
 
 
     _, buffer = cv2.imencode(".jpg", cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR))
@@ -396,6 +395,7 @@ if uploaded_file is not None:
     
 
     
+
 
 
 
