@@ -227,16 +227,26 @@ if uploaded_file is not None:
 
     st.subheader("Step 1: Crop Wall")
 
-    cropped_image = crop_wall_image(original_image)
+    # initialize session state
+    if "cropped_done" not in st.session_state:
+        st.session_state.cropped_done = False
+        st.session_state.cropped_image = None
 
-    if cropped_image is None:
-        st.info("Adjust the crop box to continue")
+    temp_crop = crop_wall_image(original_image)
+
+    if st.button("Confirm Crop"):
+        st.session_state.cropped_image = temp_crop
+        st.session_state.cropped_done = True
+
+    if not st.session_state.cropped_done:
+        st.info("Crop the wall and press Confirm Crop")
         st.stop()
 
-    cropped_image = cropped_image.convert("RGB")
+    cropped_image = st.session_state.cropped_image.convert("RGB")
 
     st.success("Wall cropped successfully")
     st.image(cropped_image, caption="Cropped Wall", use_column_width=True)
+
 
     # Convert to numpy AFTER cropping
     img_np = np.array(cropped_image)
@@ -399,6 +409,7 @@ if uploaded_file is not None:
     
 
     
+
 
 
 
