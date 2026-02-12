@@ -214,6 +214,7 @@ def generate_wall_architecture_diagram(
 
     # ---------- 6. DRAW PIPES ----------
     # ---------- 6. DRAW PIPES ----------
+   # ---------- 6. DRAW PIPES ----------
     label_counter = 0
 
     for pred in predictions:
@@ -236,17 +237,21 @@ def generate_wall_architecture_diagram(
             x1 = int(x - pipe_width_px/2)
             x2 = int(x + pipe_width_px/2)
 
-        # ---- draw dimension text FIRST (background) ----
+        # ---- draw pipe in light color ----
+        cv2.rectangle(canvas_img, (x1,y1),(x2,y2),(200,200,200),-1)
+
+        # ---- dimension label ----
         length_cm = length_px * PIXEL_TO_CM_X
-        label_offset = (label_counter % 4) * 15
+        label_offset = (label_counter % 4) * 12
         label_counter += 1
 
         cv2.putText(canvas_img, f"{length_cm:.1f}cm",
-                    (x1, max(20, y1 - 10 - label_offset)),
+                    (x1, max(15, y1 - 5 - label_offset)),
                     cv2.FONT_HERSHEY_SIMPLEX,
-                    0.7,              # larger font
-                    (180,180,180),    # light gray background text
-                    3)                # bold thickness
+                    0.45,        # smaller text
+                    (0,0,0),     # sharp black
+                    1)
+
 
         # ---- draw pipe AFTER text ----
         cv2.rectangle(canvas_img, (x1,y1),(x2,y2),(0,0,0),-1)
@@ -473,6 +478,7 @@ if uploaded_file is not None:
 
 
     
+
 
 
 
