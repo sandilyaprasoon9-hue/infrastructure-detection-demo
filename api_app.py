@@ -201,16 +201,16 @@ def generate_wall_architecture_diagram(
 
     # ---------- 4. WRITE DIMENSIONS INSIDE ----------
     cv2.putText(canvas_img, f"Wall Width: {wall_w_cm:.1f} cm",
-                (60, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,0), 2)
+                (60, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (0,0,255), 1)
 
     cv2.putText(canvas_img, f"Wall Height: {wall_h_cm:.1f} cm",
-                (60, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,0), 2)
+                (60, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (0,0,255), 1)
 
     # ---------- 5. BOTTOM TITLE ----------
     cv2.putText(canvas_img,
                 f"Wall Dimensions → Width: {wall_w_cm:.1f} cm   Height: {wall_h_cm:.1f} cm",
                 (60, img_h-10),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,0), 2)
+                cv2.FONT_HERSHEY_SIMPLEX, 0.3, (0,0,255), 1)
 
     # ---------- 6. DRAW PIPES ----------
     label_counter = 0
@@ -441,3 +441,4 @@ if uploaded_file is not None:
                 f,
                 file_name=arch_file
             )
+
