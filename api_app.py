@@ -112,7 +112,7 @@ def merge_pipes(pipes, tolerance=15):
 
 
 
-# ----------- Clone Engineering Diagram Generator -----------
+
 
 
 
@@ -181,7 +181,7 @@ def door_window_box_tool(image, PIXEL_TO_CM_X, PIXEL_TO_CM_Y):
 
 
 
-
+# ----------- WALL ARCHITECTURE Diagram Generator -----------
 def generate_wall_architecture_diagram(
         img_w, img_h, predictions,
         PIXEL_TO_CM_X, wall_w_cm, wall_h_cm,
@@ -402,15 +402,7 @@ if uploaded_file is not None:
 
 
 
-    # ----------- Architectural Layout Button -----------
-    if st.button("Generate Architectural Layout"):
-        pdf_file = generate_architecture_diagram(
-            wall_width_cm if mode == "Manual Wall Dimensions" else img_w * PIXEL_TO_CM_X,
-            wall_height_cm if mode == "Manual Wall Dimensions" else img_h * PIXEL_TO_CM_Y,
-            pipes_for_architecture
-        )
-        with open(pdf_file, "rb") as f:
-            st.download_button("Download Architectural Layout", f, file_name=pdf_file)
+    
 
     st.subheader("Door / Window Input (Optional)")
 
@@ -443,8 +435,8 @@ if uploaded_file is not None:
             
 
     # ----------- Clone Layout Button -----------
-    if st.button("Generate Clone Diagram"):
-        clone_file = generate_clone_diagram(
+    if st.button("Generate Wall Architecture Diagram"):
+        clone_file = generate_wall_architecture_diagram(
             img_w,
             img_h,
             result["predictions"],
@@ -455,20 +447,10 @@ if uploaded_file is not None:
         )
 
         with open(clone_file, "rb") as f:
-            st.download_button("Download Clone Diagram", f, file_name=clone_file)
+            st.download_button("Download Wall Architecture Diagram", f, file_name=arch_file)
 
-    # ----------- Final Engineering Drawing -----------
-    if st.button("Generate Final Engineering Drawing"):
-        final_file = generate_full_clone(
-            img_w,
-            img_h,
-            result["predictions"],
-            door_items,
-            PIXEL_TO_CM_X
-        )
+    
 
-        with open(final_file,"rb") as f:
-            st.download_button("Download Final Drawing", f, file_name=final_file)
 
 
 
