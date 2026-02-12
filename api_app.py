@@ -113,68 +113,7 @@ def merge_pipes(pipes, tolerance=15):
 
 
 # ----------- Clone Engineering Diagram Generator -----------
-def generate_clone_diagram(img_w, img_h, predictions, PIXEL_TO_CM_X, filename="clone_layout.png"):
 
-    canvas_img = np.ones((img_h, img_w, 3), dtype=np.uint8) * 255
-
-    STANDARD_PIPE_CM = 4.0
-    pipe_width_px = STANDARD_PIPE_CM / PIXEL_TO_CM_X
-
-    pipes = []
-
-    # ---------- Convert detections ----------
-    for pred in predictions:
-        x = int(pred["x"])
-        y = int(pred["y"])
-        w = int(pred["width"])
-        h = int(pred["height"])
-
-        length_px = max(w, h)
-        horizontal = w >= h
-
-        # snap to grid
-        x = snap_to_grid(x)
-        y = snap_to_grid(y)
-
-        pipes.append({
-            "x": x,
-            "y": y,
-            "length": length_px,
-            "orientation": "H" if horizontal else "V"
-        })
-
-    # ---------- merge nearby segments ----------
-    pipes = merge_pipes(pipes)
-
-    # ---------- draw ----------
-    for p in pipes:
-
-        if p["orientation"] == "H":
-            x1 = int(p["x"] - p["length"]/2)
-            x2 = int(p["x"] + p["length"]/2)
-            y1 = int(p["y"] - pipe_width_px/2)
-            y2 = int(p["y"] + pipe_width_px/2)
-        else:
-            y1 = int(p["y"] - p["length"]/2)
-            y2 = int(p["y"] + p["length"]/2)
-            x1 = int(p["x"] - pipe_width_px/2)
-            x2 = int(p["x"] + pipe_width_px/2)
-
-        cv2.rectangle(canvas_img, (x1,y1),(x2,y2),(0,0,0),-1)
-
-        length_cm = p["length"] * PIXEL_TO_CM_X
-        cv2.putText(
-            canvas_img,
-            f"{length_cm:.1f}cm",
-            (x1, max(10, y1 - 5)),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.5,
-            (0,0,0),
-            1
-        )
-
-    cv2.imwrite(filename, canvas_img)
-    return filename
 
 
 
@@ -243,10 +182,11 @@ def door_window_box_tool(image, PIXEL_TO_CM_X, PIXEL_TO_CM_Y):
 
 
 
-def generate_clone_diagram(img_w, img_h, predictions, PIXEL_TO_CM_X,
-                           wall_w_cm, wall_h_cm,
-                           door_items=None,
-                           filename="clone_layout.png"):
+def generate_wall_architecture_diagram(
+        img_w, img_h, predictions,
+        PIXEL_TO_CM_X, wall_w_cm, wall_h_cm,
+        door_items=None,
+        filename="wall_architecture_diagram.png"):
 
     canvas_img = np.ones((img_h, img_w, 3), dtype=np.uint8) * 255
 
@@ -256,63 +196,68 @@ def generate_clone_diagram(img_w, img_h, predictions, PIXEL_TO_CM_X,
     # ---------- Draw wall boundary ----------
     cv2.rectangle(canvas_img, (5,5), (img_w-5, img_h-5), (0,0,0), 2)
 
-    # ---------- Label wall dimensions ----------
+    # ---------- Wall labels ----------
     cv2.putText(canvas_img, f"Wall Width: {wall_w_cm:.1f} cm",
                 (20, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,0), 2)
 
     cv2.putText(canvas_img, f"Wall Height: {wall_h_cm:.1f} cm",
                 (20, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,0), 2)
 
-    # ---------- Draw standardized pipes ----------
+    pipes = []
+
+    # ---------- Convert detections ----------
     for pred in predictions:
-        x = int(pred["x"])
-        y = int(pred["y"])
+        x = snap_to_grid(int(pred["x"]))
+        y = snap_to_grid(int(pred["y"]))
         w = int(pred["width"])
         h = int(pred["height"])
 
-        length_px = max(w, h)
-        horizontal = w >= h
+        pipes.append({
+            "x": x,
+            "y": y,
+            "length": max(w, h),
+            "orientation": "H" if w >= h else "V"
+        })
 
-        if horizontal:
-            x1 = int(x - length_px / 2)
-            x2 = int(x + length_px / 2)
-            y1 = int(y - pipe_width_px / 2)
-            y2 = int(y + pipe_width_px / 2)
+    pipes = merge_pipes(pipes)
+
+    # ---------- Draw pipes ----------
+    for p in pipes:
+
+        if p["orientation"] == "H":
+            x1 = int(p["x"] - p["length"]/2)
+            x2 = int(p["x"] + p["length"]/2)
+            y1 = int(p["y"] - pipe_width_px/2)
+            y2 = int(p["y"] + pipe_width_px/2)
         else:
-            y1 = int(y - length_px / 2)
-            y2 = int(y + length_px / 2)
-            x1 = int(x - pipe_width_px / 2)
-            x2 = int(x + pipe_width_px / 2)
+            y1 = int(p["y"] - p["length"]/2)
+            y2 = int(p["y"] + p["length"]/2)
+            x1 = int(p["x"] - pipe_width_px/2)
+            x2 = int(p["x"] + pipe_width_px/2)
 
         cv2.rectangle(canvas_img, (x1,y1),(x2,y2),(0,0,0),-1)
 
-        length_cm = length_px * PIXEL_TO_CM_X
+        length_cm = p["length"] * PIXEL_TO_CM_X
         cv2.putText(canvas_img, f"{length_cm:.1f}cm",
                     (x1, max(10, y1 - 5)),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), 1)
 
-    # ---------- Draw doors/windows (optional) ----------
+    # ---------- Draw doors/windows ----------
     if door_items:
         for d in door_items:
-
             x = int(d["x_cm"] / PIXEL_TO_CM_X)
             y = int(d["y_cm"] / PIXEL_TO_CM_X)
             w = int(d["width_cm"] / PIXEL_TO_CM_X)
             h = int(d["height_cm"] / PIXEL_TO_CM_X)
 
-            x1 = int(x - w/2)
-            y1 = int(y - h/2)
-            x2 = int(x + w/2)
-            y2 = int(y + h/2)
-
-            cv2.rectangle(canvas_img, (x1,y1),(x2,y2),(0,0,0),2)
-
-            cv2.putText(canvas_img, "Door/Window",
-                        (x1, max(10, y1 - 5)),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0,0,0), 1)
+            cv2.rectangle(canvas_img,
+                          (int(x-w/2), int(y-h/2)),
+                          (int(x+w/2), int(y+h/2)),
+                          (0,0,0), 2)
 
     cv2.imwrite(filename, canvas_img)
     return filename
+
 
 
 
@@ -524,6 +469,7 @@ if uploaded_file is not None:
 
         with open(final_file,"rb") as f:
             st.download_button("Download Final Drawing", f, file_name=final_file)
+
 
 
 
