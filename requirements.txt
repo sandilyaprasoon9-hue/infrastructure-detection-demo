@@ -1,12 +1,11 @@
 streamlit
-inference-sdk
 opencv-python-headless
-numpy
+inference-sdk
 Pillow
+numpy
 reportlab
-streamlit-drawable-canvas
-streamlit-cropper
-streamlit-drawable-canvas
+streamlit-drawable-canvas==0.9.3
+streamlit-cropper==0.2.1
 
 
 
