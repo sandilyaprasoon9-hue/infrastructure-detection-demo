@@ -146,35 +146,38 @@ from streamlit_drawable_canvas import st_canvas
 def door_window_box_tool(image, PIXEL_TO_CM_X, PIXEL_TO_CM_Y):
 
     st.subheader("Mark Doors / Windows / Gates")
+    st.write("Enter TOP-LEFT and BOTTOM-RIGHT coordinates of each door/window")
 
-    st.write("Click TOP-LEFT and then BOTTOM-RIGHT of door/window")
+    if "rectangles" not in st.session_state:
+        st.session_state.rectangles = []
 
-    if "points" not in st.session_state:
-        st.session_state.points = []
+    # show image reference
+    st.image(image, use_column_width=True)
 
-    img_np = np.array(image)
+    col1, col2 = st.columns(2)
 
-    click = st.image(img_np, use_column_width=True)
+    with col1:
+        x1 = st.number_input("Top-Left X", step=1)
+        y1 = st.number_input("Top-Left Y", step=1)
 
-    x = st.number_input("X coordinate", step=1)
-    y = st.number_input("Y coordinate", step=1)
+    with col2:
+        x2 = st.number_input("Bottom-Right X", step=1)
+        y2 = st.number_input("Bottom-Right Y", step=1)
 
-    if st.button("Add Point"):
-        st.session_state.points.append((x, y))
+    if st.button("Add Door/Window"):
+        st.session_state.rectangles.append((x1, y1, x2, y2))
 
     items = []
 
-    if len(st.session_state.points) >= 2:
-        p1 = st.session_state.points[-2]
-        p2 = st.session_state.points[-1]
+    for (x1, y1, x2, y2) in st.session_state.rectangles:
 
-        w_px = abs(p2[0] - p1[0])
-        h_px = abs(p2[1] - p1[1])
+        w_px = abs(x2 - x1)
+        h_px = abs(y2 - y1)
 
         w_cm = w_px * PIXEL_TO_CM_X
         h_cm = h_px * PIXEL_TO_CM_Y
 
-        st.write(f"Door/Window → Width: {w_cm:.2f} cm | Height: {h_cm:.2f} cm")
+        st.write(f"Width: {w_cm:.2f} cm  |  Height: {h_cm:.2f} cm")
 
         items.append({
             "width_cm": w_cm,
@@ -182,6 +185,7 @@ def door_window_box_tool(image, PIXEL_TO_CM_X, PIXEL_TO_CM_Y):
         })
 
     return items
+
 
 
 
@@ -277,6 +281,8 @@ if uploaded_file is not None:
 
     st.write(f"Pixel→CM X: {PIXEL_TO_CM_X:.4f}")
     st.write(f"Pixel→CM Y: {PIXEL_TO_CM_Y:.4f}")
+    door_items = door_window_box_tool(cropped_image, PIXEL_TO_CM_X, PIXEL_TO_CM_Y)
+
     # --- Step 2: Mark doors/windows after calibration ---
     door_items = door_window_box_tool(cropped_image, PIXEL_TO_CM_X, PIXEL_TO_CM_Y)
 
@@ -378,6 +384,7 @@ if st.button("Generate Final Engineering Drawing"):
     
 
     
+
 
 
 
