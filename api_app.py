@@ -148,16 +148,20 @@ from streamlit_drawable_canvas import st_canvas
 def door_window_box_tool(image, PIXEL_TO_CM_X, PIXEL_TO_CM_Y):
     st.subheader("Draw rectangle over Door / Window / Gate")
 
+    # Convert safely to numpy and back (fixes blank canvas issue)
+    img_np = np.array(image)
+    bg_img = Image.fromarray(img_np)
+
     canvas_result = st_canvas(
         fill_color="rgba(0, 0, 255, 0.2)",
         stroke_width=2,
         stroke_color="blue",
-        background_image=image,
+        background_image=bg_img,
         update_streamlit=True,
-        height=image.height,
-        width=image.width,
+        height=img_np.shape[0],
+        width=img_np.shape[1],
         drawing_mode="rect",
-        key="door_canvas",
+        key="door_canvas_unique"
     )
 
     items = []
@@ -178,6 +182,7 @@ def door_window_box_tool(image, PIXEL_TO_CM_X, PIXEL_TO_CM_Y):
             })
 
     return items
+
 
 
 
@@ -394,6 +399,7 @@ if uploaded_file is not None:
     
 
     
+
 
 
 
