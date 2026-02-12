@@ -157,6 +157,18 @@ def generate_wall_architecture_diagram(
 
 
     canvas_img = np.ones((img_h + 2*margin, img_w + 2*margin, 3), dtype=np.uint8) * 255
+    # ---------- GET FULL CANVAS SIZE ----------
+    canvas_h, canvas_w = canvas_img.shape[:2]
+
+    # ---------- DRAW GRID OVER FULL CANVAS ----------
+    grid_spacing = 50
+
+    for x in range(0, canvas_w, grid_spacing):
+        cv2.line(canvas_img, (x,0), (x,canvas_h), (235,235,235), 1)
+
+    for y in range(0, canvas_h, grid_spacing):
+        cv2.line(canvas_img, (0,y), (canvas_w,y), (235,235,235), 1)
+
 
 
     STANDARD_PIPE_CM = 4.0
@@ -249,6 +261,29 @@ def generate_wall_architecture_diagram(
         x2 = max(margin, min(x2, img_w + margin))
         y1 = max(margin, min(y1, img_h + margin))
         y2 = max(margin, min(y2, img_h + margin))
+
+
+        # ---------- dotted leader line from pipe to label ----------
+        start_pt = (int((x1+x2)/2), int((y1+y2)/2))
+        end_pt   = (label_x-5, label_y+5)
+
+        segments = 15
+        for i in range(segments):
+            t1 = i / segments
+            t2 = (i + 0.5) / segments
+
+            xs = int(start_pt[0]*(1-t1) + end_pt[0]*t1)
+            ys = int(start_pt[1]*(1-t1) + end_pt[1]*t1)
+
+            xe = int(start_pt[0]*(1-t2) + end_pt[0]*t2)
+            ye = int(start_pt[1]*(1-t2) + end_pt[1]*t2)
+
+            cv2.line(canvas_img,
+                 (xs, ys),
+                 (xe, ye),
+                 (200,200,200),   # very light grey dotted line
+                 1)
+
 
 
         cv2.rectangle(canvas_img, (x1,y1),(x2,y2),(255,200,150),-1)
@@ -458,5 +493,6 @@ if uploaded_file is not None:
                 f,
                 file_name=arch_file
             )
+
 
 
