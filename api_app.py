@@ -148,14 +148,17 @@ from streamlit_drawable_canvas import st_canvas
 def door_window_box_tool(image, PIXEL_TO_CM_X, PIXEL_TO_CM_Y):
     st.subheader("Mark Doors / Windows / Gates")
 
+    # Ensure RGB PIL image
+    img = image.convert("RGB")
+
     canvas_result = st_canvas(
         fill_color="rgba(0, 0, 255, 0.2)",
         stroke_width=2,
         stroke_color="blue",
-        background_image=image,
+        background_image=img,
         update_streamlit=True,
-        height=image.height,
-        width=image.width,
+        height=img.size[1],
+        width=img.size[0],
         drawing_mode="rect",
         key="box_canvas",
     )
@@ -164,8 +167,8 @@ def door_window_box_tool(image, PIXEL_TO_CM_X, PIXEL_TO_CM_Y):
 
     if canvas_result.json_data is not None:
         for obj in canvas_result.json_data["objects"]:
-            w_px = obj["width"]
-            h_px = obj["height"]
+            w_px = obj.get("width", 0)
+            h_px = obj.get("height", 0)
 
             w_cm = w_px * PIXEL_TO_CM_X
             h_cm = h_px * PIXEL_TO_CM_Y
@@ -177,7 +180,7 @@ def door_window_box_tool(image, PIXEL_TO_CM_X, PIXEL_TO_CM_Y):
 
             st.write(f"Item → Width: {w_cm:.2f} cm | Height: {h_cm:.2f} cm")
 
-    return items
+    return
 
 
 
@@ -373,6 +376,7 @@ if st.button("Generate Final Engineering Drawing"):
     
 
     
+
 
 
 
