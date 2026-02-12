@@ -80,44 +80,89 @@ def detect_brick_size(img_np):
 
 
 
+
+def snap_to_grid(value, grid_size=10):
+    return int(round(value / grid_size) * grid_size)
+
+
+def merge_pipes(pipes, tolerance=15):
+    merged = []
+
+    pipes.sort(key=lambda x: (x["orientation"], x["y"], x["x"]))
+
+    for p in pipes:
+        if not merged:
+            merged.append(p)
+            continue
+
+        last = merged[-1]
+
+        # merge if same orientation and close
+        if (
+            p["orientation"] == last["orientation"] and
+            abs(p["y"] - last["y"]) < tolerance and
+            abs(p["x"] - (last["x"] + last["length"])) < tolerance
+        ):
+            last["length"] += p["length"]
+        else:
+            merged.append(p)
+
+    return merged
+
+
+
+
 # ----------- Clone Engineering Diagram Generator -----------
 def generate_clone_diagram(img_w, img_h, predictions, PIXEL_TO_CM_X, filename="clone_layout.png"):
 
     canvas_img = np.ones((img_h, img_w, 3), dtype=np.uint8) * 255
 
     STANDARD_PIPE_CM = 4.0
-    pipe_width_px = STANDARD_PIPE_CM / PIXEL_TO_CM_X   # convert 4cm → pixels
+    pipe_width_px = STANDARD_PIPE_CM / PIXEL_TO_CM_X
 
+    pipes = []
+
+    # ---------- Convert detections ----------
     for pred in predictions:
         x = int(pred["x"])
         y = int(pred["y"])
         w = int(pred["width"])
         h = int(pred["height"])
 
-        # -------- determine true pipe length ----------
         length_px = max(w, h)
-
-        # -------- determine orientation ----------
         horizontal = w >= h
 
-        if horizontal:
-            x1 = int(x - length_px / 2)
-            x2 = int(x + length_px / 2)
+        # snap to grid
+        x = snap_to_grid(x)
+        y = snap_to_grid(y)
 
-            y1 = int(y - pipe_width_px / 2)
-            y2 = int(y + pipe_width_px / 2)
+        pipes.append({
+            "x": x,
+            "y": y,
+            "length": length_px,
+            "orientation": "H" if horizontal else "V"
+        })
+
+    # ---------- merge nearby segments ----------
+    pipes = merge_pipes(pipes)
+
+    # ---------- draw ----------
+    for p in pipes:
+
+        if p["orientation"] == "H":
+            x1 = int(p["x"] - p["length"]/2)
+            x2 = int(p["x"] + p["length"]/2)
+            y1 = int(p["y"] - pipe_width_px/2)
+            y2 = int(p["y"] + pipe_width_px/2)
         else:
-            y1 = int(y - length_px / 2)
-            y2 = int(y + length_px / 2)
+            y1 = int(p["y"] - p["length"]/2)
+            y2 = int(p["y"] + p["length"]/2)
+            x1 = int(p["x"] - pipe_width_px/2)
+            x2 = int(p["x"] + pipe_width_px/2)
 
-            x1 = int(x - pipe_width_px / 2)
-            x2 = int(x + pipe_width_px / 2)
+        cv2.rectangle(canvas_img, (x1,y1),(x2,y2),(0,0,0),-1)
 
-        # draw standardized pipe
-        cv2.rectangle(canvas_img, (x1, y1), (x2, y2), (0,0,0), -1)
-
-        # label length
-        length_cm = length_px * PIXEL_TO_CM_X
+        length_cm = p["length"] * PIXEL_TO_CM_X
         cv2.putText(
             canvas_img,
             f"{length_cm:.1f}cm",
@@ -130,7 +175,6 @@ def generate_clone_diagram(img_w, img_h, predictions, PIXEL_TO_CM_X, filename="c
 
     cv2.imwrite(filename, canvas_img)
     return filename
-
 
 
 
@@ -392,6 +436,7 @@ if uploaded_file is not None:
 
         with open(final_file,"rb") as f:
             st.download_button("Download Final Drawing", f, file_name=final_file)
+
 
 
 
