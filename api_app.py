@@ -42,6 +42,13 @@ def generate_a4_pipe_layout(predictions, PIXEL_TO_CM_X, filename="wall_pipe_layo
         length_pixels = max(w, h)
         length_cm = length_pixels * PIXEL_TO_CM_X
 
+        pipes_for_architecture.append({
+    "x_cm": x * PIXEL_TO_CM_X,
+    "y_cm": y * PIXEL_TO_CM_Y,
+    "length_cm": length_cm
+})
+
+
         draw_x = margin_x + x * draw_scale
         draw_y = margin_y + y * draw_scale
         draw_length = length_pixels * draw_scale
@@ -146,6 +153,8 @@ if uploaded_file is not None:
 
     total_length = 0
     pipe_count = 0
+    pipes_for_architecture = []
+
 
     for pred in result["predictions"]:
         label = pred["class"]
@@ -175,11 +184,16 @@ if uploaded_file is not None:
     st.write(f"Total Pipes: {pipe_count}")
     st.write(f"Total Pipe Length: {total_length:.2f} cm")
 
-    # ----------- A4 Layout Button -----------
-    if st.button("Generate A4 Pipe Layout"):
-        pdf_file = generate_a4_pipe_layout(result["predictions"], PIXEL_TO_CM_X)
-        with open(pdf_file, "rb") as f:
-            st.download_button("Download A4 Layout", f, file_name=pdf_file)
+   # ----------- Architectural Layout Button -----------
+if st.button("Generate Architectural Layout"):
+    pdf_file = generate_architecture_diagram(
+        wall_width_cm if mode == "Manual Wall Dimensions" else img_w * PIXEL_TO_CM_X,
+        wall_height_cm if mode == "Manual Wall Dimensions" else img_h * PIXEL_TO_CM_Y,
+        pipes_for_architecture
+    )
+    with open(pdf_file, "rb") as f:
+        st.download_button("Download Architectural Layout", f, file_name=pdf_file)
+
 
 
 
