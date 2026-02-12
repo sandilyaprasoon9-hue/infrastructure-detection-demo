@@ -201,19 +201,18 @@ def generate_wall_architecture_diagram(
 
     # ---------- 4. WRITE DIMENSIONS INSIDE ----------
     cv2.putText(canvas_img, f"Wall Width: {wall_w_cm:.1f} cm",
-                (60, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0,0,0), 2)
+                (60, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,0), 2)
 
     cv2.putText(canvas_img, f"Wall Height: {wall_h_cm:.1f} cm",
-                (60, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0,0,0), 2)
+                (60, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,0), 2)
 
     # ---------- 5. BOTTOM TITLE ----------
     cv2.putText(canvas_img,
                 f"Wall Dimensions → Width: {wall_w_cm:.1f} cm   Height: {wall_h_cm:.1f} cm",
                 (60, img_h-10),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0,0,0), 2)
+                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,0), 2)
 
     # ---------- 6. DRAW PIPES ----------
-     # ---------- 6. DRAW PIPES ----------
     label_counter = 0
 
     for pred in predictions:
@@ -236,34 +235,16 @@ def generate_wall_architecture_diagram(
             x1 = int(x - pipe_width_px/2)
             x2 = int(x + pipe_width_px/2)
 
-        # ---- draw pipe (light blue) ----
-        cv2.rectangle(canvas_img, (x1,y1),(x2,y2),(255,200,150),-1)
+        cv2.rectangle(canvas_img, (x1,y1),(x2,y2),(0,0,0),-1)
 
-        # ---- dimension label ----
+        # ---- stagger labels to avoid overlap ----
         length_cm = length_px * PIXEL_TO_CM_X
-
-        label_offset = (label_counter % 6) * 15
+        label_offset = (label_counter % 4) * 12
         label_counter += 1
 
-        label_x = max(5, min(x2 + 10, img_w - 120))
-        label_y = max(20, min(y1 - 5 - label_offset, img_h - 10))
-
-        # leader line
-        cv2.line(canvas_img,
-                 (int((x1+x2)/2), int((y1+y2)/2)),
-                 (label_x-5, label_y+5),
-                 (0,0,0), 1)
-
-        # label text
         cv2.putText(canvas_img, f"{length_cm:.1f}cm",
-                    (label_x, label_y),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.45,
-                    (0,0,0),
-                    1)
-
-
-
+                    (x1, max(10, y1 - 5 - label_offset)),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), 1)
 
     cv2.imwrite(filename, canvas_img)
     return filename
@@ -460,33 +441,3 @@ if uploaded_file is not None:
                 f,
                 file_name=arch_file
             )
-
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
