@@ -220,19 +220,18 @@ if uploaded_file is not None:
     # --- Step 1: Crop wall ---
     
 
+    st.subheader("Step 1: Crop Wall")
+
     cropped_image = crop_wall_image(original_image)
+
     if cropped_image is None:
-        st.warning("Please crop the wall area first")
+        st.info("Adjust the crop box to continue")
         st.stop()
 
-    cropped_image = cropped_image.convert("RGB")   # ensure correct format
+    cropped_image = cropped_image.convert("RGB")
 
-
-
-    
-
-
-    st.image(cropped_image, caption="Processed Wall Area", use_column_width=True)
+    st.success("Wall cropped successfully")
+    st.image(cropped_image, caption="Cropped Wall", use_column_width=True)
 
     # Convert to numpy AFTER cropping
     img_np = np.array(cropped_image)
@@ -395,6 +394,7 @@ if uploaded_file is not None:
     
 
     
+
 
 
 
