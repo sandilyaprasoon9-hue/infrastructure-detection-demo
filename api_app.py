@@ -168,8 +168,9 @@ def door_window_box_tool(image, PIXEL_TO_CM_X, PIXEL_TO_CM_Y):
 
     if canvas_result.json_data is not None:
         for obj in canvas_result.json_data["objects"]:
-            w_px = obj["width"]
-            h_px = obj["height"]
+            w_px = obj["width"] * obj.get("scaleX", 1)
+            h_px = obj["height"] * obj.get("scaleY", 1)
+
 
             w_cm = w_px * PIXEL_TO_CM_X
             h_cm = h_px * PIXEL_TO_CM_Y
@@ -408,6 +409,7 @@ if uploaded_file is not None:
     
 
     
+
 
 
 
