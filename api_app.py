@@ -148,9 +148,22 @@ from streamlit_drawable_canvas import st_canvas
 def door_window_box_tool(image, PIXEL_TO_CM_X, PIXEL_TO_CM_Y):
     st.subheader("Draw rectangle over Door / Window / Gate")
 
-    # Convert safely to numpy and back (fixes blank canvas issue)
-    img_np = np.array(image)
-    bg_img = Image.fromarray(img_np)
+    # --- FIX: Use the PIL image directly, but resize if too large ---
+    bg_img = image  # original PIL Image
+
+    # Limit canvas size for reliable rendering
+    max_canvas_size = 600
+    w, h = bg_img.size
+    if max(w, h) > max_canvas_size:
+        ratio = max_canvas_size / max(w, h)
+        new_w, new_h = int(w * ratio), int(h * ratio)
+        bg_img = bg_img.resize((new_w, new_h), Image.Resampling.LANCZOS)
+    else:
+        new_w, new_h = w, h
+
+    # --- FIX: Unique key to avoid stale canvas state ---
+    import time
+    canvas_key = f"door_canvas_{int(time.time())}"
 
     canvas_result = st_canvas(
         fill_color="rgba(0, 0, 255, 0.2)",
@@ -158,10 +171,10 @@ def door_window_box_tool(image, PIXEL_TO_CM_X, PIXEL_TO_CM_Y):
         stroke_color="blue",
         background_image=bg_img,
         update_streamlit=True,
-        height=img_np.shape[0],
-        width=img_np.shape[1],
+        height=new_h,
+        width=new_w,
         drawing_mode="rect",
-        key="door_canvas_unique"
+        key=canvas_key
     )
 
     items = []
@@ -171,8 +184,14 @@ def door_window_box_tool(image, PIXEL_TO_CM_X, PIXEL_TO_CM_Y):
             w_px = obj["width"]
             h_px = obj["height"]
 
-            w_cm = w_px * PIXEL_TO_CM_X
-            h_cm = h_px * PIXEL_TO_CM_Y
+            # --- FIX: Scale dimensions back to original image scale ---
+            scale_factor_w = w / new_w
+            scale_factor_h = h / new_h
+            w_px_original = w_px * scale_factor_w
+            h_px_original = h_px * scale_factor_h
+
+            w_cm = w_px_original * PIXEL_TO_CM_X
+            h_cm = h_px_original * PIXEL_TO_CM_Y
 
             st.write(f"Door/Window → Width: {w_cm:.2f} cm | Height: {h_cm:.2f} cm")
 
@@ -182,8 +201,6 @@ def door_window_box_tool(image, PIXEL_TO_CM_X, PIXEL_TO_CM_Y):
             })
 
     return items
-
-
 
 
 
@@ -409,6 +426,7 @@ if uploaded_file is not None:
     
 
     
+
 
 
 
