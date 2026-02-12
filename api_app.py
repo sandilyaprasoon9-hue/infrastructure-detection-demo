@@ -125,8 +125,16 @@ from streamlit_cropper import st_cropper
 
 def crop_wall_image(image):
     st.subheader("Crop Wall Area")
-    cropped_img = st_cropper(image, realtime_update=True, box_color='blue')
+
+    cropped_img = st_cropper(
+        image,
+        realtime_update=True,
+        box_color="blue",
+        aspect_ratio=None
+    )
+
     return cropped_img
+
 
 
 from streamlit_drawable_canvas import st_canvas
@@ -254,9 +262,9 @@ if uploaded_file is not None:
     st.write(f"Pixel→CM X: {PIXEL_TO_CM_X:.4f}")
     st.write(f"Pixel→CM Y: {PIXEL_TO_CM_Y:.4f}")
 
-    uploaded_file.seek(0)
-    img_bytes = uploaded_file.read()
-    img_base64 = base64.b64encode(img_bytes).decode("utf-8")
+    _, buffer = cv2.imencode(".jpg", cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR))
+    img_base64 = base64.b64encode(buffer).decode("utf-8")
+
 
     result = CLIENT.infer(img_base64, model_id=MODEL_ID)
 
@@ -298,7 +306,7 @@ if uploaded_file is not None:
 
         st.write(f"{label} | Length: {length_cm:.2f} cm | Diameter: {STANDARD_PIPE_CM:.2f} cm")
 
-        st.image(img_np, caption="Detected Objects")
+    st.image(img_np, caption="Detected Objects")
 
     st.subheader("Summary")
     st.write(f"Total Pipes: {pipe_count}")
@@ -342,6 +350,7 @@ if uploaded_file is not None:
     
 
     
+
 
 
 
