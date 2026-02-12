@@ -1,3 +1,5 @@
+
+
 import streamlit as st
 from inference_sdk import InferenceHTTPClient
 from PIL import Image
@@ -177,6 +179,7 @@ if uploaded_file is not None:
         pdf_file = generate_a4_pipe_layout(result["predictions"], PIXEL_TO_CM_X)
         with open(pdf_file, "rb") as f:
             st.download_button("Download A4 Layout", f, file_name=pdf_file)
+
 
 
 
