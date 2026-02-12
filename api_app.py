@@ -221,8 +221,8 @@ if uploaded_file is not None:
     cropped_image = crop_wall_image(original_image)
 
     if cropped_image is None:
-    st.warning("Please crop the wall area first")
-    st.stop()
+        st.warning("Please crop the wall area first")
+        st.stop()
 
 
     
@@ -384,6 +384,7 @@ if uploaded_file is not None:
     
 
     
+
 
 
 
