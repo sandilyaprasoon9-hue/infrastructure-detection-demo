@@ -153,8 +153,11 @@ def generate_wall_architecture_diagram(
         PIXEL_TO_CM_X, wall_w_cm, wall_h_cm,
         door_items=None,
         filename="wall_architecture_diagram.png"):
+    margin = 40
 
-    canvas_img = np.ones((img_h, img_w, 3), dtype=np.uint8) * 255
+
+    canvas_img = np.ones((img_h + 2*margin, img_w + 2*margin, 3), dtype=np.uint8) * 255
+
 
     STANDARD_PIPE_CM = 4.0
     pipe_width_px = STANDARD_PIPE_CM / PIXEL_TO_CM_X
@@ -167,9 +170,11 @@ def generate_wall_architecture_diagram(
         cv2.line(canvas_img, (0,y), (img_w,y), (220,220,220), 1)
 
     # ---------- 2. WALL BOUNDARY ----------
-    margin = 40
-    cv2.rectangle(canvas_img, (margin,margin),
-                  (img_w-margin, img_h-margin), (0,0,0), 2)
+    cv2.rectangle(canvas_img,
+              (margin, margin),
+              (img_w + margin, img_h + margin),
+              (0,0,0), 2)
+
 
     # ---------- 3. DIMENSION ARROWS ----------
     cv2.arrowedLine(canvas_img,
@@ -234,8 +239,20 @@ def generate_wall_architecture_diagram(
             y2 = int(y + length_px/2)
             x1 = int(x - pipe_width_px/2)
             x2 = int(x + pipe_width_px/2)
+        x1 += margin
+        x2 += margin
+        y1 += margin
+        y2 += margin
 
-        cv2.rectangle(canvas_img, (x1,y1),(x2,y2),(0,0,0),-1)
+        # ---------- CLIP PIPE INSIDE WALL ----------
+        x1 = max(margin, min(x1, img_w + margin))
+        x2 = max(margin, min(x2, img_w + margin))
+        y1 = max(margin, min(y1, img_h + margin))
+        y2 = max(margin, min(y2, img_h + margin))
+
+
+        cv2.rectangle(canvas_img, (x1,y1),(x2,y2),(255,200,150),-1)
+
 
         # ---- stagger labels to avoid overlap ----
         length_cm = length_px * PIXEL_TO_CM_X
@@ -441,4 +458,5 @@ if uploaded_file is not None:
                 f,
                 file_name=arch_file
             )
+
 
