@@ -455,26 +455,6 @@ if uploaded_file is not None:
 
 
 
-    st.subheader("Add Door / Window (Optional)")
-
-    door_items = []
-
-    num_items = st.number_input("Number of Doors/Windows", min_value=0, step=1)
-
-    for i in range(int(num_items)):
-        st.write(f"Item {i+1}")
-
-        x_cm = st.number_input(f"X position (cm) {i}", key=f"x{i}")
-        y_cm = st.number_input(f"Y position (cm) {i}", key=f"y{i}")
-        w_cm = st.number_input(f"Width (cm) {i}", key=f"w{i}")
-        h_cm = st.number_input(f"Height (cm) {i}", key=f"h{i}")
-
-        door_items.append({
-            "x_cm": x_cm,
-            "y_cm": y_cm,
-            "width_cm": w_cm,
-            "height_cm": h_cm
-        })
 
 
     # ----------- Architectural Layout Button -----------
@@ -486,6 +466,28 @@ if uploaded_file is not None:
         )
         with open(pdf_file, "rb") as f:
             st.download_button("Download Architectural Layout", f, file_name=pdf_file)
+
+    st.subheader("Door / Window Input (Optional)")
+
+    door_items = []
+
+    num_items = st.number_input("Number of Doors/Windows", min_value=0, step=1)
+
+    for i in range(int(num_items)):
+        st.write(f"Item {i+1}")
+
+        x_cm = st.number_input(f"X position (cm) {i}", key=f"x_{i}")
+        y_cm = st.number_input(f"Y position (cm) {i}", key=f"y_{i}")
+        w_cm = st.number_input(f"Width (cm) {i}", key=f"w_{i}")
+        h_cm = st.number_input(f"Height (cm) {i}", key=f"h_{i}")
+
+        door_items.append({
+            "x_cm": x_cm,
+            "y_cm": y_cm,
+            "width_cm": w_cm,
+            "height_cm": h_cm
+        })
+
             
 
     # ----------- Clone Layout Button -----------
@@ -517,6 +519,7 @@ if uploaded_file is not None:
 
         with open(final_file,"rb") as f:
             st.download_button("Download Final Drawing", f, file_name=final_file)
+
 
 
 
