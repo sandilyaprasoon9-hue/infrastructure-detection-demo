@@ -283,6 +283,14 @@ if uploaded_file is not None:
 
     st.write(f"Pixel→CM X: {PIXEL_TO_CM_X:.4f}")
     st.write(f"Pixel→CM Y: {PIXEL_TO_CM_Y:.4f}")
+    st.subheader("Draw rectangle over Doors / Windows")
+
+    door_items = door_window_box_tool(
+        cropped_image.convert("RGB"),
+        PIXEL_TO_CM_X,
+        PIXEL_TO_CM_Y
+    )
+
     # --- Step 2: Mark doors/windows after calibration ---
     door_items = door_window_box_tool(cropped_image, PIXEL_TO_CM_X, PIXEL_TO_CM_Y)
 
@@ -388,6 +396,7 @@ if uploaded_file is not None:
     
 
     
+
 
 
 
