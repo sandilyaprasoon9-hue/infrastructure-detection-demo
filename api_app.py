@@ -1,5 +1,4 @@
 
-
 import streamlit as st
 from inference_sdk import InferenceHTTPClient
 from PIL import Image
@@ -11,6 +10,9 @@ import base64
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import cm
+
+# NEW MODULE
+from architectural_layout import generate_architecture_diagram
 
 # ----------- Roboflow API -----------
 CLIENT = InferenceHTTPClient(
@@ -51,6 +53,7 @@ def generate_a4_pipe_layout(predictions, PIXEL_TO_CM_X, filename="wall_pipe_layo
     c.save()
     return filename
 
+
 # ----------- Brick Auto Detection -----------
 def detect_brick_size(img_np):
     gray = cv2.cvtColor(img_np, cv2.COLOR_BGR2GRAY)
@@ -76,6 +79,7 @@ def detect_brick_size(img_np):
 
     return int(np.mean(widths)), int(np.mean(heights))
 
+
 # ----------- UI -----------
 st.title("Wall Infrastructure Detection")
 
@@ -90,50 +94,14 @@ if uploaded_file is not None:
     img_np = np.array(image)
     img_h, img_w = img_np.shape[:2]
 
-    mode = st.radio(
-        "Measurement Mode",
-        ["Manual Wall Dimensions", "Brick Calibration (Manual)", "Brick Calibration (Auto Detect)"]
-    )
+    wall_width_cm = st.number_input("Wall Width (cm)", min_value=0.0)
+    wall_height_cm = st.number_input("Wall Height (cm)", min_value=0.0)
 
-    scale_ready = False
-
-    if mode == "Manual Wall Dimensions":
-        wall_width_cm = st.number_input("Wall Width (cm)", min_value=0.0)
-        wall_height_cm = st.number_input("Wall Height (cm)", min_value=0.0)
-
-        if wall_width_cm > 0 and wall_height_cm > 0:
-            PIXEL_TO_CM_X = wall_width_cm / img_w
-            PIXEL_TO_CM_Y = wall_height_cm / img_h
-            scale_ready = True
-
-    elif mode == "Brick Calibration (Manual)":
-        brick_pixel_w = st.number_input("Brick pixel width", min_value=0.0)
-        brick_pixel_h = st.number_input("Brick pixel height", min_value=0.0)
-
-        if brick_pixel_w > 5 and brick_pixel_h > 5:
-            PIXEL_TO_CM_X = 20 / brick_pixel_w
-            PIXEL_TO_CM_Y = 10 / brick_pixel_h
-            scale_ready = True
-
-    else:
-        brick_w_px, brick_h_px = detect_brick_size(img_np)
-
-        if brick_w_px is not None:
-            st.success("Brick auto detected")
-            st.write(f"Brick pixel width: {brick_w_px}")
-            st.write(f"Brick pixel height: {brick_h_px}")
-
-            PIXEL_TO_CM_X = 20 / brick_w_px
-            PIXEL_TO_CM_Y = 10 / brick_h_px
-            scale_ready = True
-        else:
-            st.warning("Bricks not detected clearly")
-
-    if not scale_ready:
+    if wall_width_cm == 0 or wall_height_cm == 0:
         st.stop()
 
-    st.write(f"Pixel→CM X: {PIXEL_TO_CM_X:.4f}")
-    st.write(f"Pixel→CM Y: {PIXEL_TO_CM_Y:.4f}")
+    PIXEL_TO_CM_X = wall_width_cm / img_w
+    PIXEL_TO_CM_Y = wall_height_cm / img_h
 
     uploaded_file.seek(0)
     img_bytes = uploaded_file.read()
@@ -142,9 +110,10 @@ if uploaded_file is not None:
     result = CLIENT.infer(img_base64, model_id=MODEL_ID)
 
     STANDARD_PIPE_CM = 3.0
-
     total_length = 0
     pipe_count = 0
+
+    pipes_for_architecture = []
 
     for pred in result["predictions"]:
         label = pred["class"]
@@ -166,6 +135,12 @@ if uploaded_file is not None:
         pipe_count += 1
         total_length += length_cm
 
+        pipes_for_architecture.append({
+            "x_cm": x * PIXEL_TO_CM_X,
+            "y_cm": y * PIXEL_TO_CM_Y,
+            "length_cm": length_cm
+        })
+
         st.write(f"{label} | Length: {length_cm:.2f} cm | Diameter: {STANDARD_PIPE_CM:.2f} cm")
 
     st.image(img_np, caption="Detected Objects")
@@ -174,24 +149,11 @@ if uploaded_file is not None:
     st.write(f"Total Pipes: {pipe_count}")
     st.write(f"Total Pipe Length: {total_length:.2f} cm")
 
-    # ----------- A4 Layout Button -----------
-    if st.button("Generate A4 Pipe Layout"):
-        pdf_file = generate_a4_pipe_layout(result["predictions"], PIXEL_TO_CM_X)
+    if st.button("Generate Architectural Layout"):
+        pdf_file = generate_architecture_diagram(
+            wall_width_cm,
+            wall_height_cm,
+            pipes_for_architecture
+        )
         with open(pdf_file, "rb") as f:
-            st.download_button("Download A4 Layout", f, file_name=pdf_file)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            st.download_button("Download Architectural Layout", f, file_name=pdf_file)
