@@ -163,7 +163,7 @@ def door_window_box_tool(image, PIXEL_TO_CM_X, PIXEL_TO_CM_Y):
         width=img_np.shape[1],
         drawing_mode="rect",
         display_toolbar=True,
-        key="door_canvas_unique"
+        key=f"door_canvas_{image.size[0]}_{image.size[1]}"
     )
 
 
@@ -413,6 +413,7 @@ if uploaded_file is not None:
     
 
     
+
 
 
 
