@@ -17,7 +17,7 @@ from reportlab.lib.units import cm
 # ----------- Roboflow API -----------
 CLIENT = InferenceHTTPClient(
     api_url="https://serverless.roboflow.com",
-    api_key="6xjiriCPTWTkyix8KnVO"
+    api_key=st.secrets["ROBOFLOW_API_KEY"]
 )
 
 MODEL_ID = "wall-infrastructure-detection/2"
@@ -521,6 +521,7 @@ if uploaded_file is not None:
                 f,
                 file_name=arch_file
             )
+
 
 
 
