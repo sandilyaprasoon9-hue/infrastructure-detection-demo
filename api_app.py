@@ -149,8 +149,9 @@ def door_window_box_tool(image, PIXEL_TO_CM_X, PIXEL_TO_CM_Y):
     st.subheader("Draw rectangle over Door / Window / Gate")
 
     # Convert safely to numpy and back (fixes blank canvas issue)
-    img_np = np.array(image)
-    bg_img = Image.fromarray(img_np)
+    img_np = np.array(image).copy()
+    bg_img = Image.fromarray(img_np).convert("RGB")
+
 
     canvas_result = st_canvas(
         fill_color="rgba(0, 0, 255, 0.2)",
@@ -161,8 +162,10 @@ def door_window_box_tool(image, PIXEL_TO_CM_X, PIXEL_TO_CM_Y):
         height=img_np.shape[0],
         width=img_np.shape[1],
         drawing_mode="rect",
+        display_toolbar=True,
         key="door_canvas_unique"
     )
+
 
     items = []
 
@@ -170,6 +173,7 @@ def door_window_box_tool(image, PIXEL_TO_CM_X, PIXEL_TO_CM_Y):
         for obj in canvas_result.json_data["objects"]:
             w_px = obj["width"] * obj.get("scaleX", 1)
             h_px = obj["height"] * obj.get("scaleY", 1)
+
 
 
             w_cm = w_px * PIXEL_TO_CM_X
@@ -409,6 +413,7 @@ if uploaded_file is not None:
     
 
     
+
 
 
 
