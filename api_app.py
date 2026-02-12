@@ -229,7 +229,7 @@ def generate_wall_architecture_diagram(
                 (60, img_h-10),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.3, (0,0,255), 1)
 
-    # ---------- 6. DRAW PIPES ----------
+        # ---------- 6. DRAW PIPES ----------
     label_counter = 0
 
     for pred in predictions:
@@ -251,19 +251,31 @@ def generate_wall_architecture_diagram(
             y2 = int(y + length_px/2)
             x1 = int(x - pipe_width_px/2)
             x2 = int(x + pipe_width_px/2)
+
+        # shift into wall coordinate
         x1 += margin
         x2 += margin
         y1 += margin
         y2 += margin
 
-        # ---------- CLIP PIPE INSIDE WALL ----------
+        # clip inside wall
         x1 = max(margin, min(x1, img_w + margin))
         x2 = max(margin, min(x2, img_w + margin))
         y1 = max(margin, min(y1, img_h + margin))
         y2 = max(margin, min(y2, img_h + margin))
 
+        # draw pipe
+        cv2.rectangle(canvas_img, (x1,y1),(x2,y2),(255,200,150),-1)
 
-        # ---------- dotted leader line from pipe to label ----------
+        # compute label
+        length_cm = length_px * PIXEL_TO_CM_X
+        label_offset = (label_counter % 6) * 15
+        label_counter += 1
+
+        label_x = max(5, min(x2 + 15, canvas_w - 120))
+        label_y = max(20, min(y1 - 5 - label_offset, canvas_h - 10))
+
+        # dotted leader line
         start_pt = (int((x1+x2)/2), int((y1+y2)/2))
         end_pt   = (label_x-5, label_y+5)
 
@@ -278,25 +290,16 @@ def generate_wall_architecture_diagram(
             xe = int(start_pt[0]*(1-t2) + end_pt[0]*t2)
             ye = int(start_pt[1]*(1-t2) + end_pt[1]*t2)
 
-            cv2.line(canvas_img,
-                 (xs, ys),
-                 (xe, ye),
-                 (200,200,200),   # very light grey dotted line
-                 1)
+            cv2.line(canvas_img, (xs,ys), (xe,ye), (200,200,200), 1)
 
-
-
-        cv2.rectangle(canvas_img, (x1,y1),(x2,y2),(255,200,150),-1)
-
-
-        # ---- stagger labels to avoid overlap ----
-        length_cm = length_px * PIXEL_TO_CM_X
-        label_offset = (label_counter % 4) * 12
-        label_counter += 1
-
+        # write text
         cv2.putText(canvas_img, f"{length_cm:.1f}cm",
-                    (x1, max(10, y1 - 5 - label_offset)),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), 1)
+                    (label_x, label_y),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.45,
+                    (0,0,0),
+                    1)
+
 
     cv2.imwrite(filename, canvas_img)
     return filename
@@ -493,6 +496,7 @@ if uploaded_file is not None:
                 f,
                 file_name=arch_file
             )
+
 
 
 
