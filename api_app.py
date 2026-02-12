@@ -143,37 +143,42 @@ from streamlit_drawable_canvas import st_canvas
 
 
 
+from streamlit_drawable_canvas import st_canvas
+
 def door_window_box_tool(image, PIXEL_TO_CM_X, PIXEL_TO_CM_Y):
+    st.subheader("Draw rectangle over Door / Window / Gate")
 
-    st.subheader("Mark Doors / Windows / Gates")
-
-    st.image(image, use_column_width=True)
-
-    st.write("Enter Top-Left and Bottom-Right coordinates")
-
-    x1 = st.number_input("Top-Left X", step=1, key="x1")
-    y1 = st.number_input("Top-Left Y", step=1, key="y1")
-    x2 = st.number_input("Bottom-Right X", step=1, key="x2")
-    y2 = st.number_input("Bottom-Right Y", step=1, key="y2")
+    canvas_result = st_canvas(
+        fill_color="rgba(0, 0, 255, 0.2)",
+        stroke_width=2,
+        stroke_color="blue",
+        background_image=image,
+        update_streamlit=True,
+        height=image.height,
+        width=image.width,
+        drawing_mode="rect",
+        key="door_canvas",
+    )
 
     items = []
 
-    if st.button("Calculate Door/Window Size", key="calc_box"):
+    if canvas_result.json_data is not None:
+        for obj in canvas_result.json_data["objects"]:
+            w_px = obj["width"]
+            h_px = obj["height"]
 
-        w_px = abs(x2 - x1)
-        h_px = abs(y2 - y1)
+            w_cm = w_px * PIXEL_TO_CM_X
+            h_cm = h_px * PIXEL_TO_CM_Y
 
-        w_cm = w_px * PIXEL_TO_CM_X
-        h_cm = h_px * PIXEL_TO_CM_Y
+            st.write(f"Door/Window → Width: {w_cm:.2f} cm | Height: {h_cm:.2f} cm")
 
-        st.success(f"Width: {w_cm:.2f} cm | Height: {h_cm:.2f} cm")
-
-        items.append({
-            "width_cm": w_cm,
-            "height_cm": h_cm
-        })
+            items.append({
+                "width_cm": w_cm,
+                "height_cm": h_cm
+            })
 
     return items
+
 
 
 
@@ -370,6 +375,7 @@ if st.button("Generate Final Engineering Drawing"):
     
 
     
+
 
 
 
