@@ -2,35 +2,39 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import cm
 
-def generate_architecture_diagram(
-        wall_width_cm,
-        wall_height_cm,
-        pipes,
-        filename="architectural_layout.pdf"
-    ):
-    """
-    pipes = [
-        {"x_cm": 50, "y_cm": 120, "length_cm": 40},
-        {"x_cm": 200, "y_cm": 90, "length_cm": 30}
-    ]
-    """
 
+def generate_architecture_diagram(wall_w_cm, wall_h_cm, pipes, filename="architecture_layout.pdf"):
     c = canvas.Canvas(filename, pagesize=A4)
     page_w, page_h = A4
 
-    margin = 2*cm
+    margin = 2 * cm
+    grid = 10   # 1 square = 10 cm
+    scale = 0.2  # drawing scale
 
-    # Draw wall rectangle
-    scale = 0.5   # drawing scale
-    wall_w = wall_width_cm * scale
-    wall_h = wall_height_cm * scale
+    # ---------- Draw Graph Grid ----------
+    step = grid * scale
 
-    c.setFont("Helvetica", 12)
-    c.drawString(margin, page_h - margin, "Architectural Pipe Layout")
+    x = margin
+    while x < page_w - margin:
+        c.setLineWidth(0.2)
+        c.line(x, margin, x, page_h - margin)
+        x += step
 
-    c.rect(margin, margin, wall_w, wall_h)
+    y = margin
+    while y < page_h - margin:
+        c.line(margin, y, page_w - margin, y)
+        y += step
 
-    # Draw pipes
+    # ---------- Draw Wall ----------
+    wall_w_draw = wall_w_cm * scale
+    wall_h_draw = wall_h_cm * scale
+
+    c.setLineWidth(2)
+    c.rect(margin, margin, wall_w_draw, wall_h_draw)
+
+    # ---------- Draw Pipes ----------
+    c.setLineWidth(1.5)
+
     for p in pipes:
         x = margin + p["x_cm"] * scale
         y = margin + p["y_cm"] * scale
