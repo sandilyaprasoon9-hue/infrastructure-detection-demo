@@ -146,17 +146,17 @@ from streamlit_drawable_canvas import st_canvas
 def polygon_label_tool(image):
     st.subheader("Label Doors / Windows / Switches")
 
-    # ensure correct PIL format for canvas
-    image = image.convert("RGB")
+    # convert PIL -> numpy for Streamlit canvas
+    img_np = np.array(image)
 
     canvas_result = st_canvas(
         fill_color="rgba(255, 0, 0, 0.3)",
         stroke_width=2,
         stroke_color="red",
-        background_image=image,
+        background_image=Image.fromarray(img_np),
         update_streamlit=True,
-        height=image.size[1],
-        width=image.size[0],
+        height=img_np.shape[0],
+        width=img_np.shape[1],
         drawing_mode="polygon",
         key="canvas",
     )
@@ -165,11 +165,9 @@ def polygon_label_tool(image):
 
     if canvas_result.json_data is not None:
         for obj in canvas_result.json_data["objects"]:
-            if "path" in obj:
-                polygons.append(obj["path"])
+            polygons.append(obj["path"])
 
     return polygons
-
 
 
 
@@ -360,6 +358,7 @@ if uploaded_file is not None:
     
 
     
+
 
 
 
