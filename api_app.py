@@ -203,18 +203,19 @@ uploaded_file = st.file_uploader("Upload Image", type=["jpg","png","jpeg"])
 if uploaded_file is not None:
 
     uploaded_file.seek(0)
-    image = Image.open(uploaded_file)
+    original_image = Image.open(uploaded_file).convert("RGB")
 
-    # Step 1: Crop wall
-    image = crop_wall_image(image)
+    # --- Step 1: Crop wall ---
+    cropped_image = crop_wall_image(original_image)
 
-    # Step 2: Label windows / doors / switches
-    polygons = polygon_label_tool(image)
+    # --- Step 2: Label doors/windows/switches ---
+    polygons = polygon_label_tool(cropped_image)
 
-    st.image(image, caption="Processed Image", use_column_width=True)
+    st.image(cropped_image, caption="Processed Wall Area", use_column_width=True)
 
+    # Convert to numpy AFTER cropping
+    img_np = np.array(cropped_image)
 
-    img_np = np.array(image)
     img_h, img_w = img_np.shape[:2]
 
     mode = st.radio(
@@ -350,6 +351,7 @@ if uploaded_file is not None:
     
 
     
+
 
 
 
