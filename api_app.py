@@ -411,12 +411,12 @@ if uploaded_file is not None:
             "height_cm": h_cm
         })
         # -------- compute wall dimensions in cm --------
-        if mode == "Manual Wall Dimensions":
-            wall_w = wall_width_cm
-            wall_h = wall_height_cm
-        else:
-            wall_w = img_w * PIXEL_TO_CM_X
-            wall_h = img_h * PIXEL_TO_CM_Y
+    if mode == "Manual Wall Dimensions":
+        wall_w = wall_width_cm
+        wall_h = wall_height_cm
+    else:
+        wall_w = img_w * PIXEL_TO_CM_X
+        wall_h = img_h * PIXEL_TO_CM_Y
 
             
 
@@ -444,6 +444,7 @@ if uploaded_file is not None:
 
 
     
+
 
 
 
