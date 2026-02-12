@@ -143,31 +143,42 @@ from streamlit_drawable_canvas import st_canvas
 
 
 
-def polygon_label_tool(image):
-    st.subheader("Label Doors / Windows / Switches")
+from streamlit_drawable_canvas import st_canvas
 
-    # convert PIL -> numpy for Streamlit canvas
-    img_np = np.array(image)
+def door_window_box_tool(image, PIXEL_TO_CM_X, PIXEL_TO_CM_Y):
+    st.subheader("Mark Doors / Windows / Gates")
 
     canvas_result = st_canvas(
-        fill_color="rgba(255, 0, 0, 0.3)",
+        fill_color="rgba(0, 0, 255, 0.2)",
         stroke_width=2,
-        stroke_color="red",
-        background_image=Image.fromarray(img_np),
+        stroke_color="blue",
+        background_image=image,
         update_streamlit=True,
-        height=img_np.shape[0],
-        width=img_np.shape[1],
-        drawing_mode="polygon",
-        key="canvas",
+        height=image.height,
+        width=image.width,
+        drawing_mode="rect",
+        key="box_canvas",
     )
 
-    polygons = []
+    items = []
 
     if canvas_result.json_data is not None:
         for obj in canvas_result.json_data["objects"]:
-            polygons.append(obj["path"])
+            w_px = obj["width"]
+            h_px = obj["height"]
 
-    return polygons
+            w_cm = w_px * PIXEL_TO_CM_X
+            h_cm = h_px * PIXEL_TO_CM_Y
+
+            items.append({
+                "width_cm": w_cm,
+                "height_cm": h_cm
+            })
+
+            st.write(f"Item → Width: {w_cm:.2f} cm | Height: {h_cm:.2f} cm")
+
+    return items
+
 
 
 
@@ -216,7 +227,8 @@ if uploaded_file is not None:
     cropped_image = crop_wall_image(original_image)
 
     # --- Step 2: Label doors/windows/switches ---
-    polygons = polygon_label_tool(cropped_image)
+    door_items = door_window_box_tool(cropped_image, PIXEL_TO_CM_X, PIXEL_TO_CM_Y)
+
 
     st.image(cropped_image, caption="Processed Wall Area", use_column_width=True)
 
@@ -358,6 +370,7 @@ if uploaded_file is not None:
     
 
     
+
 
 
 
