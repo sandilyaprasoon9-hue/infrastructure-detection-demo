@@ -226,8 +226,7 @@ if uploaded_file is not None:
     # --- Step 1: Crop wall ---
     cropped_image = crop_wall_image(original_image)
 
-    # --- Step 2: Label doors/windows/switches ---
-    door_items = door_window_box_tool(cropped_image, PIXEL_TO_CM_X, PIXEL_TO_CM_Y)
+    
 
 
     st.image(cropped_image, caption="Processed Wall Area", use_column_width=True)
@@ -281,6 +280,9 @@ if uploaded_file is not None:
 
     st.write(f"Pixel→CM X: {PIXEL_TO_CM_X:.4f}")
     st.write(f"Pixel→CM Y: {PIXEL_TO_CM_Y:.4f}")
+    # --- Step 2: Mark doors/windows after calibration ---
+    door_items = door_window_box_tool(cropped_image, PIXEL_TO_CM_X, PIXEL_TO_CM_Y)
+
 
     _, buffer = cv2.imencode(".jpg", cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR))
     img_base64 = base64.b64encode(buffer).decode("utf-8")
@@ -370,6 +372,7 @@ if uploaded_file is not None:
     
 
     
+
 
 
 
