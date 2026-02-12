@@ -218,11 +218,15 @@ if uploaded_file is not None:
     original_image = Image.open(uploaded_file).convert("RGB")
 
     # --- Step 1: Crop wall ---
-    cropped_image = crop_wall_image(original_image)
+    
 
+    cropped_image = crop_wall_image(original_image)
     if cropped_image is None:
         st.warning("Please crop the wall area first")
         st.stop()
+
+    cropped_image = cropped_image.convert("RGB")   # ensure correct format
+
 
 
     
@@ -358,18 +362,16 @@ if uploaded_file is not None:
 
     # ----------- Final Engineering Drawing -----------
     if st.button("Generate Final Engineering Drawing"):
-    final_file = generate_full_clone(
-        img_w,
-        img_h,
-        result["predictions"],
-        door_items,
-        PIXEL_TO_CM_X
-    )
+        final_file = generate_full_clone(
+            img_w,
+            img_h,
+            result["predictions"],
+            door_items,
+            PIXEL_TO_CM_X
+        )
 
-    with open(final_file,"rb") as f:
-        st.download_button("Download Final Drawing", f, file_name=final_file)
-
-
+        with open(final_file,"rb") as f:
+            st.download_button("Download Final Drawing", f, file_name=final_file)
 
 
 
@@ -377,13 +379,16 @@ if uploaded_file is not None:
 
 
 
-    
-    
 
 
     
+    
+
 
     
+
+    
+
 
 
 
