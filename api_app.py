@@ -1,7 +1,6 @@
 from architectural_layout import generate_architecture_diagram
 
 
-import io
 
 import streamlit as st
 from inference_sdk import InferenceHTTPClient
@@ -139,7 +138,7 @@ def crop_wall_image(image):
 
 
 
-
+from streamlit_drawable_canvas import st_canvas
 
 
 
@@ -149,12 +148,9 @@ from streamlit_drawable_canvas import st_canvas
 def door_window_box_tool(image, PIXEL_TO_CM_X, PIXEL_TO_CM_Y):
     st.subheader("Draw rectangle over Door / Window / Gate")
 
-    # Convert to numpy
+    # Convert safely to numpy and back (fixes blank canvas issue)
     img_np = np.array(image)
-
-    # --- IMPORTANT: recreate image via buffer (fixes blank background issue on cloud) ---
-    _, png_buffer = cv2.imencode(".png", cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR))
-    bg_img = Image.open(io.BytesIO(png_buffer.tobytes())).convert("RGB")
+    bg_img = Image.fromarray(img_np)
 
     canvas_result = st_canvas(
         fill_color="rgba(0, 0, 255, 0.2)",
@@ -165,18 +161,16 @@ def door_window_box_tool(image, PIXEL_TO_CM_X, PIXEL_TO_CM_Y):
         height=img_np.shape[0],
         width=img_np.shape[1],
         drawing_mode="rect",
-        display_toolbar=True,
-        key=f"door_canvas_{img_np.shape[0]}_{img_np.shape[1]}"
+        key="door_canvas_unique"
     )
 
     items = []
 
     if canvas_result.json_data is not None:
         for obj in canvas_result.json_data["objects"]:
-
-            # Correct rectangle size using scale factors
             w_px = obj["width"] * obj.get("scaleX", 1)
             h_px = obj["height"] * obj.get("scaleY", 1)
+
 
             w_cm = w_px * PIXEL_TO_CM_X
             h_cm = h_px * PIXEL_TO_CM_Y
@@ -189,10 +183,6 @@ def door_window_box_tool(image, PIXEL_TO_CM_X, PIXEL_TO_CM_Y):
             })
 
     return items
-
-
-
-
 def generate_full_clone(img_w, img_h, predictions, door_items, PIXEL_TO_CM_X, filename="final_clone.png"):
     canvas_img = np.ones((img_h, img_w, 3), dtype=np.uint8) * 255
 
@@ -409,9 +399,6 @@ if uploaded_file is not None:
 
 
 
-
-
-
     
     
 
@@ -419,6 +406,7 @@ if uploaded_file is not None:
     
 
     
+
 
 
 
